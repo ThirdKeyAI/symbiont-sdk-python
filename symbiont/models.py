@@ -1,8 +1,9 @@
 """Data models for the Symbiont SDK."""
 
-from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -18,7 +19,7 @@ class AgentState(str, Enum):
 class ReviewStatus(str, Enum):
     """Review session status enumeration."""
     SUBMITTED = "submitted"
-    PENDING_ANALYSIS = "pending_analysis" 
+    PENDING_ANALYSIS = "pending_analysis"
     ANALYZING = "analyzing"
     PENDING_REVIEW = "pending_review"
     UNDER_REVIEW = "under_review"
@@ -50,7 +51,7 @@ class FindingCategory(str, Enum):
 
 class Agent(BaseModel):
     """Agent model for the Symbiont platform."""
-    
+
     id: str
     name: str
     description: str
