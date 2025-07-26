@@ -13,10 +13,10 @@ def read_requirements():
 
 setup(
     name='symbiont-sdk',
-    version='0.1.0',
+    version='0.2.0',
     author='Jascha Wanger / ThirdKey.ai',
     author_email='oss@symbiont.dev',
-    description='Python SDK for Symbiont platform',
+    description='Python SDK for Symbiont platform with Tool Review and Runtime APIs',
     long_description=read_readme(),
     long_description_content_type='text/markdown',
     url='https://github.com/thirdkeyai/symbiont-sdk-python',
