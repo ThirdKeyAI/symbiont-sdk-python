@@ -24,6 +24,57 @@ cd symbiont-sdk-python
 pip install -e .
 ```
 
+### Docker
+
+The SDK is also available as a Docker image from GitHub Container Registry:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:latest
+
+# Or pull a specific version
+docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:v0.2.0
+```
+
+#### Running with Docker
+
+```bash
+# Run interactively with Python REPL
+docker run -it --rm ghcr.io/thirdkeyai/symbiont-sdk-python:latest
+
+# Run with environment variables
+docker run -it --rm \
+  -e SYMBIONT_API_KEY=your_api_key \
+  -e SYMBIONT_BASE_URL=http://host.docker.internal:8080/api/v1 \
+  ghcr.io/thirdkeyai/symbiont-sdk-python:latest
+
+# Run a Python script from host
+docker run --rm \
+  -v $(pwd):/workspace \
+  -w /workspace \
+  -e SYMBIONT_API_KEY=your_api_key \
+  ghcr.io/thirdkeyai/symbiont-sdk-python:latest \
+  python your_script.py
+
+# Execute one-liner
+docker run --rm \
+  -e SYMBIONT_API_KEY=your_api_key \
+  ghcr.io/thirdkeyai/symbiont-sdk-python:latest \
+  python -c "from symbiont import Client; print(Client().health_check())"
+```
+
+#### Building Docker Image Locally
+
+```bash
+# Build from source
+git clone https://github.com/thirdkeyai/symbiont-sdk-python.git
+cd symbiont-sdk-python
+docker build -t symbiont-sdk:local .
+
+# Run locally built image
+docker run -it --rm symbiont-sdk:local
+```
+
 ## Configuration
 
 The SDK can be configured using environment variables in a `.env` file. Copy the provided `.env.example` file to get started:
@@ -488,4 +539,18 @@ To create a PyPI API token:
 2. Create new token with scope for this project
 3. Add to GitHub repository secrets as `PYPI_API_TOKEN`
 
-The release workflow will automatically publish to PyPI when a new tag is pushed.
+#### Container Registry Publishing
+
+The Docker workflow automatically publishes container images to GitHub Container Registry:
+
+- **Latest image**: Published on every push to main branch (`ghcr.io/thirdkeyai/symbiont-sdk-python:latest`)
+- **Version tags**: Published on release tags (`ghcr.io/thirdkeyai/symbiont-sdk-python:v0.2.0`)
+- **Branch tags**: Published for feature branches during development
+
+Images are built for multiple architectures (linux/amd64, linux/arm64) and include:
+- Multi-stage optimized builds for smaller image size
+- Non-root user execution for security
+- Health checks for container monitoring
+- Full SDK functionality with all dependencies
+
+Both the release workflow (PyPI) and Docker workflow (container registry) will automatically run when a new tag is pushed.
