@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include pyproject.toml
+include .env.example
+recursive-include symbiont *.py
+recursive-exclude tests *
+recursive-exclude .github *
+recursive-exclude .venv *
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .pytest_cache

@@ -439,3 +439,53 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Setting up for Development
+
+1. Fork the repository
+2. Clone your fork locally
+3. Set up development environment:
+
+```bash
+git clone https://github.com/yourusername/symbiont-sdk-python.git
+cd symbiont-sdk-python
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
+
+4. Run tests to ensure everything works:
+
+```bash
+pytest
+ruff check symbiont/
+bandit -r symbiont/
+```
+
+5. Make your changes and add tests
+6. Submit a pull request
+
+### Release Process
+
+Releases are automated through GitHub Actions:
+
+1. **CI/CD**: Every push/PR triggers testing across Python 3.8-3.12
+2. **Release**: Create a new tag with format `v*.*.*` (e.g., `v0.2.0`) to trigger:
+   - Automated testing
+   - Package building
+   - PyPI publishing
+   - GitHub release creation
+
+#### Setting up PyPI Publishing (Maintainers)
+
+For repository maintainers, set up these GitHub repository secrets:
+
+- `PYPI_API_TOKEN`: PyPI API token for automated publishing
+
+To create a PyPI API token:
+1. Go to PyPI Account Settings → API tokens
+2. Create new token with scope for this project
+3. Add to GitHub repository secrets as `PYPI_API_TOKEN`
+
+The release workflow will automatically publish to PyPI when a new tag is pushed.
