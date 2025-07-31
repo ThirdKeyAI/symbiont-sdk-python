@@ -16,6 +16,7 @@ from .models import (
     AgentDeployRequest,
     AgentDeployResponse,
     AgentMetrics,
+    AgentRoutingRule,
     AgentState,
     AgentStatusResponse,
     AnalysisResults,
@@ -29,6 +30,11 @@ from .models import (
     FindingSeverity,
     # System Models
     HealthResponse,
+    HttpInputConfig,
+    HttpInputCreateRequest,
+    HttpInputServerInfo,
+    HttpInputUpdateRequest,
+    HttpResponseControlConfig,
     HumanReviewDecision,
     KnowledgeItem,
     # Vector Database & RAG Models
@@ -47,6 +53,8 @@ from .models import (
     ReviewSessionResponse,
     ReviewSessionState,
     ReviewStatus,
+    # HTTP Input Models
+    RouteMatchType,
     SecretBackendConfig,
     # Secrets Management Models
     SecretBackendType,
@@ -68,6 +76,8 @@ from .models import (
     VectorSearchRequest,
     VectorSearchResponse,
     VectorSearchResult,
+    WebhookTriggerRequest,
+    WebhookTriggerResponse,
     # Workflow Models
     WorkflowExecutionRequest,
     WorkflowExecutionResponse,
@@ -112,6 +122,11 @@ __all__ = [
 
     # Agent DSL Models
     'DslCompileRequest', 'DslCompileResponse', 'AgentDeployRequest', 'AgentDeployResponse',
+
+    # HTTP Input Models
+    'RouteMatchType', 'AgentRoutingRule', 'HttpResponseControlConfig',
+    'HttpInputConfig', 'HttpInputServerInfo', 'HttpInputCreateRequest', 'HttpInputUpdateRequest',
+    'WebhookTriggerRequest', 'WebhookTriggerResponse',
 
     # Exceptions
     'SymbiontError',

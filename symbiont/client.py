@@ -21,6 +21,10 @@ from .models import (
     DslCompileResponse,
     # System models
     HealthResponse,
+    # HTTP Input models
+    HttpInputCreateRequest,
+    HttpInputServerInfo,
+    HttpInputUpdateRequest,
     HumanReviewDecision,
     # Vector Database & RAG models
     KnowledgeItem,
@@ -44,6 +48,8 @@ from .models import (
     SystemMetrics,
     VectorSearchRequest,
     VectorSearchResponse,
+    WebhookTriggerRequest,
+    WebhookTriggerResponse,
     WorkflowExecutionRequest,
 )
 
@@ -660,4 +666,122 @@ class Client:
             Dict[str, Any]: Stop confirmation
         """
         response = self._request("POST", f"agents/deployments/{deployment_id}/stop")
+        return response.json()
+
+    # =============================================================================
+    # HTTP Input Methods
+    # =============================================================================
+
+    def create_http_input_server(self, request: Union[HttpInputCreateRequest, Dict[str, Any]]) -> HttpInputServerInfo:
+        """Create and start an HTTP input server.
+
+        Args:
+            request: HTTP input server creation request
+
+        Returns:
+            HttpInputServerInfo: Server information
+        """
+        if isinstance(request, dict):
+            request = HttpInputCreateRequest(**request)
+
+        response = self._request("POST", "http-input/servers", json=request.dict())
+        return HttpInputServerInfo(**response.json())
+
+    def list_http_input_servers(self) -> List[HttpInputServerInfo]:
+        """List all HTTP input servers.
+
+        Returns:
+            List[HttpInputServerInfo]: List of server information
+        """
+        response = self._request("GET", "http-input/servers")
+        return [HttpInputServerInfo(**server) for server in response.json()]
+
+    def get_http_input_server(self, server_id: str) -> HttpInputServerInfo:
+        """Get information about a specific HTTP input server.
+
+        Args:
+            server_id: The server identifier
+
+        Returns:
+            HttpInputServerInfo: Server information
+        """
+        response = self._request("GET", f"http-input/servers/{server_id}")
+        return HttpInputServerInfo(**response.json())
+
+    def update_http_input_server(self, request: Union[HttpInputUpdateRequest, Dict[str, Any]]) -> HttpInputServerInfo:
+        """Update an HTTP input server configuration.
+
+        Args:
+            request: HTTP input server update request
+
+        Returns:
+            HttpInputServerInfo: Updated server information
+        """
+        if isinstance(request, dict):
+            request = HttpInputUpdateRequest(**request)
+
+        response = self._request("PUT", f"http-input/servers/{request.server_id}", json=request.dict())
+        return HttpInputServerInfo(**response.json())
+
+    def start_http_input_server(self, server_id: str) -> Dict[str, Any]:
+        """Start an HTTP input server.
+
+        Args:
+            server_id: The server identifier
+
+        Returns:
+            Dict[str, Any]: Start confirmation
+        """
+        response = self._request("POST", f"http-input/servers/{server_id}/start")
+        return response.json()
+
+    def stop_http_input_server(self, server_id: str) -> Dict[str, Any]:
+        """Stop an HTTP input server.
+
+        Args:
+            server_id: The server identifier
+
+        Returns:
+            Dict[str, Any]: Stop confirmation
+        """
+        response = self._request("POST", f"http-input/servers/{server_id}/stop")
+        return response.json()
+
+    def delete_http_input_server(self, server_id: str) -> Dict[str, Any]:
+        """Delete an HTTP input server.
+
+        Args:
+            server_id: The server identifier
+
+        Returns:
+            Dict[str, Any]: Deletion confirmation
+        """
+        response = self._request("DELETE", f"http-input/servers/{server_id}")
+        return response.json()
+
+    def trigger_webhook(self, request: Union[WebhookTriggerRequest, Dict[str, Any]]) -> WebhookTriggerResponse:
+        """Manually trigger a webhook for testing purposes.
+
+        Args:
+            request: Webhook trigger request
+
+        Returns:
+            WebhookTriggerResponse: Trigger response
+        """
+        if isinstance(request, dict):
+            request = WebhookTriggerRequest(**request)
+
+        response = self._request("POST", f"http-input/servers/{request.server_id}/trigger", json=request.dict())
+        return WebhookTriggerResponse(**response.json())
+
+    def get_http_input_metrics(self, server_id: str) -> Dict[str, Any]:
+        """Get metrics for an HTTP input server.
+
+        Args:
+            server_id: The server identifier
+
+        Returns:
+            Dict[str, Any]: Server metrics
+        """
+        response = self._request("GET", f"http-input/servers/{server_id}/metrics")
         return response.json()

@@ -490,3 +490,85 @@ class AgentMetrics(BaseModel):
     cpu_usage_percent: float
     last_activity: datetime
     uptime_seconds: int
+
+
+# =============================================================================
+# HTTP Input Models
+# =============================================================================
+
+class RouteMatchType(str, Enum):
+    """Route matching condition types."""
+    PATH_PREFIX = "path_prefix"
+    HEADER_EQUALS = "header_equals"
+    JSON_FIELD_EQUALS = "json_field_equals"
+
+
+class AgentRoutingRule(BaseModel):
+    """Rule to route HTTP requests to specific agents."""
+    condition_type: RouteMatchType
+    condition_value: str
+    condition_target: Optional[str] = None  # For header/field name
+    agent_id: str
+
+
+class HttpResponseControlConfig(BaseModel):
+    """HTTP response control configuration."""
+    default_status: int = 200
+    agent_output_to_json: bool = True
+    error_status: int = 500
+    echo_input_on_error: bool = False
+
+
+class HttpInputConfig(BaseModel):
+    """HTTP input server configuration."""
+    bind_address: str = "0.0.0.0"  # nosec B104 - This is a configuration default, not actual binding
+    port: int = 8081
+    path: str = "/webhook"
+    agent_id: str
+    auth_header: Optional[str] = None
+    jwt_public_key_path: Optional[str] = None
+    max_body_bytes: int = 65536
+    concurrency: int = 10
+    routing_rules: Optional[List[AgentRoutingRule]] = None
+    response_control: Optional[HttpResponseControlConfig] = None
+    forward_headers: List[str] = []
+    cors_enabled: bool = False
+    audit_enabled: bool = True
+
+
+class HttpInputServerInfo(BaseModel):
+    """HTTP input server status information."""
+    server_id: str
+    config: HttpInputConfig
+    status: str  # "running", "stopped", "error"
+    uptime_seconds: Optional[int] = None
+    requests_processed: int = 0
+    active_connections: int = 0
+    last_error: Optional[str] = None
+
+
+class HttpInputCreateRequest(BaseModel):
+    """Request to create/start HTTP input server."""
+    config: HttpInputConfig
+
+
+class HttpInputUpdateRequest(BaseModel):
+    """Request to update HTTP input server configuration."""
+    server_id: str
+    config: HttpInputConfig
+
+
+class WebhookTriggerRequest(BaseModel):
+    """Request to manually trigger webhook for testing."""
+    server_id: str
+    payload: Dict[str, Any]
+    headers: Dict[str, str] = {}
+
+
+class WebhookTriggerResponse(BaseModel):
+    """Response from webhook trigger."""
+    status: str
+    response_code: int
+    response_body: Dict[str, Any]
+    processing_time_ms: float
+    agent_id: str
