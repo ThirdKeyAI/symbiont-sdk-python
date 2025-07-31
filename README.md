@@ -475,11 +475,214 @@ pytest
 - pydantic
 - python-dotenv
 
-## What's New in v0.2.0
+## What's New in v0.3.0
+
+### Major New Features
+
+- **Secrets Management System**: Complete secrets management with HashiCorp Vault, encrypted files, and OS keychain integration
+- **MCP Management**: Enhanced Model Context Protocol server management and tool integration
+- **Vector Database & RAG**: Knowledge management with vector similarity search and retrieval-augmented generation
+- **Agent DSL Operations**: DSL compilation and agent deployment capabilities
+- **Enhanced Monitoring**: Comprehensive system and agent metrics
+- **Security Enhancements**: Advanced signing and verification workflows
+
+### Secrets Management
+
+```python
+from symbiont import (
+    Client, SecretBackendConfig, SecretBackendType,
+    VaultConfig, VaultAuthMethod, SecretRequest
+)
+
+client = Client()
+
+# Configure HashiCorp Vault backend
+vault_config = VaultConfig(
+    url="https://vault.example.com",
+    auth_method=VaultAuthMethod.TOKEN,
+    token="hvs.abc123..."
+)
+
+backend_config = SecretBackendConfig(
+    backend_type=SecretBackendType.VAULT,
+    vault_config=vault_config
+)
+
+client.configure_secret_backend(backend_config)
+
+# Store and retrieve secrets
+secret_request = SecretRequest(
+    agent_id="agent-123",
+    secret_name="api_key",
+    secret_value="secret_value_here",
+    description="API key for external service"
+)
+
+response = client.store_secret(secret_request)
+print(f"Secret stored: {response.secret_name}")
+
+# Retrieve secret
+secret_value = client.get_secret("agent-123", "api_key")
+print(f"Retrieved secret: {secret_value}")
+
+# List all secrets for an agent
+secrets_list = client.list_secrets("agent-123")
+print(f"Agent secrets: {secrets_list.secrets}")
+```
+
+### MCP Management
+
+```python
+from symbiont import McpServerConfig
+
+# Add MCP server
+mcp_config = McpServerConfig(
+    name="filesystem-server",
+    command=["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
+    env={"NODE_ENV": "production"},
+    timeout_seconds=30
+)
+
+client.add_mcp_server(mcp_config)
+
+# Connect to server
+client.connect_mcp_server("filesystem-server")
+
+# List available tools and resources
+tools = client.list_mcp_tools("filesystem-server")
+resources = client.list_mcp_resources("filesystem-server")
+
+print(f"Available tools: {[tool.name for tool in tools]}")
+print(f"Available resources: {[resource.uri for resource in resources]}")
+
+# Get connection status
+connection_info = client.get_mcp_server("filesystem-server")
+print(f"Status: {connection_info.status}")
+print(f"Tools count: {connection_info.tools_count}")
+```
+
+### Vector Database & RAG
+
+```python
+from symbiont import (
+    KnowledgeItem, VectorMetadata, KnowledgeSourceType,
+    VectorSearchRequest, ContextQuery
+)
+
+# Add knowledge items
+metadata = VectorMetadata(
+    source="documentation.md",
+    source_type=KnowledgeSourceType.DOCUMENT,
+    timestamp=datetime.now(),
+    agent_id="agent-123"
+)
+
+knowledge_item = KnowledgeItem(
+    id="doc-001",
+    content="This is important documentation about the system...",
+    metadata=metadata
+)
+
+client.add_knowledge_item(knowledge_item)
+
+# Search knowledge base
+search_request = VectorSearchRequest(
+    query="How do I configure the system?",
+    agent_id="agent-123",
+    source_types=[KnowledgeSourceType.DOCUMENT],
+    limit=5,
+    similarity_threshold=0.7
+)
+
+search_results = client.search_knowledge(search_request)
+for result in search_results.results:
+    print(f"Score: {result.similarity_score}")
+    print(f"Content: {result.item.content[:100]}...")
+
+# Get context for RAG operations
+context_query = ContextQuery(
+    query="How do I set up authentication?",
+    agent_id="agent-123",
+    max_context_items=3
+)
+
+context = client.get_context(context_query)
+print(f"Retrieved {len(context.context_items)} context items")
+print(f"Sources: {context.sources}")
+```
+
+### Agent DSL Operations
+
+```python
+from symbiont import DslCompileRequest, AgentDeployRequest
+
+# Compile DSL code
+dsl_code = """
+agent webhook_handler {
+    name: "Webhook Handler"
+    description: "Handles incoming webhooks"
+    
+    trigger github_webhook {
+        on_push: main
+    }
+    
+    action process_webhook {
+        validate_signature()
+        parse_payload()
+        trigger_workflow()
+    }
+}
+"""
+
+compile_request = DslCompileRequest(
+    dsl_content=dsl_code,
+    agent_name="webhook_handler",
+    validate_only=False
+)
+
+compile_result = client.compile_dsl(compile_request)
+if compile_result.success:
+    print(f"Compiled successfully: {compile_result.agent_id}")
+    
+    # Deploy the agent
+    deploy_request = AgentDeployRequest(
+        agent_id=compile_result.agent_id,
+        environment="production",
+        config_overrides={"max_concurrent_tasks": 10}
+    )
+    
+    deployment = client.deploy_agent(deploy_request)
+    print(f"Deployed: {deployment.deployment_id}")
+    print(f"Endpoint: {deployment.endpoint_url}")
+else:
+    print(f"Compilation errors: {compile_result.errors}")
+```
+
+### Enhanced Monitoring
+
+```python
+# Get comprehensive system metrics
+system_metrics = client.get_metrics()
+print(f"Memory usage: {system_metrics.memory_usage_percent}%")
+print(f"CPU usage: {system_metrics.cpu_usage_percent}%")
+print(f"Active agents: {system_metrics.active_agents}")
+print(f"Vector DB items: {system_metrics.vector_db_items}")
+print(f"MCP connections: {system_metrics.mcp_connections}")
+
+# Get agent-specific metrics
+agent_metrics = client.get_agent_metrics("agent-123")
+print(f"Tasks completed: {agent_metrics.tasks_completed}")
+print(f"Average response time: {agent_metrics.average_response_time_ms}ms")
+print(f"Agent uptime: {agent_metrics.uptime_seconds}s")
+```
+
+## Previous Release Notes
+
+### v0.2.0
 
 - **Tool Review API**: Complete implementation of tool review workflows
 - **Runtime API**: Agent management, workflow execution, and system metrics
-- **Enhanced Models**: Comprehensive type definitions for all API responses  
+- **Enhanced Models**: Comprehensive type definitions for all API responses
 - **Better Error Handling**: Specific exceptions for different error conditions
 - **Improved Documentation**: Complete API reference with examples
 

@@ -13,15 +13,32 @@ from .exceptions import (
 from .models import (
     # Core Agent Models
     Agent,
+    AgentDeployRequest,
+    AgentDeployResponse,
+    AgentMetrics,
     AgentState,
     AgentStatusResponse,
     AnalysisResults,
+    ContextQuery,
+    ContextResponse,
+    # Agent DSL Models
+    DslCompileRequest,
+    DslCompileResponse,
     ErrorResponse,
     FindingCategory,
     FindingSeverity,
     # System Models
     HealthResponse,
     HumanReviewDecision,
+    KnowledgeItem,
+    # Vector Database & RAG Models
+    KnowledgeSourceType,
+    McpConnectionInfo,
+    # MCP Management Models
+    McpConnectionStatus,
+    McpResourceInfo,
+    McpServerConfig,
+    McpToolInfo,
     PaginationInfo,
     ResourceUsage,
     ReviewSession,
@@ -30,14 +47,27 @@ from .models import (
     ReviewSessionResponse,
     ReviewSessionState,
     ReviewStatus,
+    SecretBackendConfig,
+    # Secrets Management Models
+    SecretBackendType,
+    SecretListResponse,
+    SecretRequest,
+    SecretResponse,
     SecurityFinding,
     SignedTool,
     SigningRequest,
     SigningResponse,
+    SystemMetrics,
     # Tool Review Models
     Tool,
     ToolProvider,
     ToolSchema,
+    VaultAuthMethod,
+    VaultConfig,
+    VectorMetadata,
+    VectorSearchRequest,
+    VectorSearchResponse,
+    VectorSearchResult,
     # Workflow Models
     WorkflowExecutionRequest,
     WorkflowExecutionResponse,
@@ -46,14 +76,14 @@ from .models import (
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     # Client
     'Client',
 
     # Core Agent Models
-    'Agent', 'AgentState', 'ResourceUsage', 'AgentStatusResponse',
+    'Agent', 'AgentState', 'ResourceUsage', 'AgentStatusResponse', 'AgentMetrics',
 
     # Workflow Models
     'WorkflowExecutionRequest', 'WorkflowExecutionResponse',
@@ -66,7 +96,22 @@ __all__ = [
     'SigningRequest', 'SigningResponse', 'SignedTool',
 
     # System Models
-    'HealthResponse', 'ErrorResponse', 'PaginationInfo',
+    'HealthResponse', 'ErrorResponse', 'PaginationInfo', 'SystemMetrics',
+
+    # Secrets Management Models
+    'SecretBackendType', 'SecretBackendConfig', 'SecretRequest', 'SecretResponse', 'SecretListResponse',
+    'VaultAuthMethod', 'VaultConfig',
+
+    # MCP Management Models
+    'McpConnectionStatus', 'McpServerConfig', 'McpConnectionInfo', 'McpToolInfo', 'McpResourceInfo',
+
+    # Vector Database & RAG Models
+    'KnowledgeSourceType', 'VectorMetadata', 'KnowledgeItem',
+    'VectorSearchRequest', 'VectorSearchResult', 'VectorSearchResponse',
+    'ContextQuery', 'ContextResponse',
+
+    # Agent DSL Models
+    'DslCompileRequest', 'DslCompileResponse', 'AgentDeployRequest', 'AgentDeployResponse',
 
     # Exceptions
     'SymbiontError',

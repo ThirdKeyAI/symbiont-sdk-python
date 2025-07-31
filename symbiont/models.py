@@ -16,6 +16,37 @@ class AgentState(str, Enum):
     STOPPED = "stopped"
 
 
+class SecretBackendType(str, Enum):
+    """Secret backend type enumeration."""
+    VAULT = "vault"
+    ENCRYPTED_FILE = "encrypted_file"
+    OS_KEYCHAIN = "os_keychain"
+
+
+class VaultAuthMethod(str, Enum):
+    """Vault authentication method enumeration."""
+    TOKEN = "token"  # nosec B105 - This is an enum value, not a password
+    KUBERNETES = "kubernetes"
+    AWS_IAM = "aws_iam"
+    APPROLE = "approle"
+
+
+class McpConnectionStatus(str, Enum):
+    """MCP connection status enumeration."""
+    CONNECTED = "connected"
+    DISCONNECTED = "disconnected"
+    CONNECTING = "connecting"
+    ERROR = "error"
+
+
+class KnowledgeSourceType(str, Enum):
+    """Knowledge source type enumeration."""
+    DOCUMENT = "document"
+    CODE = "code"
+    API_REFERENCE = "api_reference"
+    CONVERSATION = "conversation"
+
+
 class ReviewStatus(str, Enum):
     """Review session status enumeration."""
     SUBMITTED = "submitted"
@@ -245,3 +276,217 @@ class SignedTool(BaseModel):
     signer_id: str
     signature_algorithm: str
     review_id: str
+
+
+# =============================================================================
+# Secrets Management Models
+# =============================================================================
+
+class VaultConfig(BaseModel):
+    """HashiCorp Vault configuration."""
+    url: str
+    auth_method: VaultAuthMethod
+    token: Optional[str] = None
+    role_id: Optional[str] = None
+    secret_id: Optional[str] = None
+    kubernetes_role: Optional[str] = None
+    aws_role: Optional[str] = None
+
+
+class SecretBackendConfig(BaseModel):
+    """Secret backend configuration."""
+    backend_type: SecretBackendType
+    vault_config: Optional[VaultConfig] = None
+    file_path: Optional[str] = None
+    encryption_key: Optional[str] = None
+
+
+class SecretRequest(BaseModel):
+    """Secret operation request."""
+    agent_id: str
+    secret_name: str
+    secret_value: Optional[str] = None
+    description: Optional[str] = None
+
+
+class SecretResponse(BaseModel):
+    """Secret operation response."""
+    secret_name: str
+    agent_id: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
+class SecretListResponse(BaseModel):
+    """List secrets response."""
+    secrets: List[str]
+    agent_id: str
+
+
+# =============================================================================
+# MCP Management Models
+# =============================================================================
+
+class McpServerConfig(BaseModel):
+    """MCP server configuration."""
+    name: str
+    command: List[str]
+    env: Dict[str, str] = {}
+    cwd: Optional[str] = None
+    timeout_seconds: int = 30
+
+
+class McpConnectionInfo(BaseModel):
+    """MCP connection information."""
+    server_name: str
+    status: McpConnectionStatus
+    pid: Optional[int] = None
+    connected_at: Optional[datetime] = None
+    last_error: Optional[str] = None
+    tools_count: int = 0
+    resources_count: int = 0
+
+
+class McpToolInfo(BaseModel):
+    """MCP tool information."""
+    name: str
+    description: str
+    server_name: str
+    tool_schema: Dict[str, Any] = Field(..., alias="schema")
+    verified: bool = False
+    verification_hash: Optional[str] = None
+
+
+class McpResourceInfo(BaseModel):
+    """MCP resource information."""
+    uri: str
+    name: Optional[str] = None
+    description: Optional[str] = None
+    mime_type: Optional[str] = None
+    server_name: str
+
+
+# =============================================================================
+# Vector Database & RAG Models
+# =============================================================================
+
+class VectorMetadata(BaseModel):
+    """Vector metadata for knowledge items."""
+    source: str
+    source_type: KnowledgeSourceType
+    chunk_index: Optional[int] = None
+    timestamp: datetime
+    agent_id: Optional[str] = None
+
+
+class KnowledgeItem(BaseModel):
+    """Knowledge item for vector database."""
+    id: str
+    content: str
+    embedding: Optional[List[float]] = None
+    metadata: VectorMetadata
+
+
+class VectorSearchRequest(BaseModel):
+    """Vector similarity search request."""
+    query: str
+    agent_id: Optional[str] = None
+    source_types: List[KnowledgeSourceType] = []
+    limit: int = 10
+    similarity_threshold: float = 0.7
+
+
+class VectorSearchResult(BaseModel):
+    """Vector search result."""
+    item: KnowledgeItem
+    similarity_score: float
+
+
+class VectorSearchResponse(BaseModel):
+    """Vector search response."""
+    results: List[VectorSearchResult]
+    query: str
+    total_results: int
+
+
+class ContextQuery(BaseModel):
+    """Context query for RAG operations."""
+    query: str
+    agent_id: Optional[str] = None
+    max_context_items: int = 5
+    include_conversation_history: bool = True
+
+
+class ContextResponse(BaseModel):
+    """Context response from RAG system."""
+    context_items: List[str]
+    sources: List[str]
+    query: str
+    relevance_scores: List[float]
+
+
+# =============================================================================
+# Agent DSL Models
+# =============================================================================
+
+class DslCompileRequest(BaseModel):
+    """DSL compilation request."""
+    dsl_content: str
+    agent_name: str
+    validate_only: bool = False
+
+
+class DslCompileResponse(BaseModel):
+    """DSL compilation response."""
+    success: bool
+    agent_id: Optional[str] = None
+    errors: List[str] = []
+    warnings: List[str] = []
+    compiled_at: datetime
+
+
+class AgentDeployRequest(BaseModel):
+    """Agent deployment request."""
+    agent_id: str
+    environment: str = "development"
+    config_overrides: Dict[str, Any] = {}
+
+
+class AgentDeployResponse(BaseModel):
+    """Agent deployment response."""
+    deployment_id: str
+    agent_id: str
+    status: str
+    deployed_at: datetime
+    endpoint_url: Optional[str] = None
+
+
+# =============================================================================
+# Enhanced Monitoring Models
+# =============================================================================
+
+class SystemMetrics(BaseModel):
+    """Enhanced system metrics."""
+    uptime_seconds: int
+    memory_usage_bytes: int
+    memory_usage_percent: float
+    cpu_usage_percent: float
+    disk_usage_bytes: int
+    disk_usage_percent: float
+    active_agents: int
+    total_agents: int
+    secrets_count: int
+    mcp_connections: int
+    vector_db_items: int
+
+
+class AgentMetrics(BaseModel):
+    """Agent-specific metrics."""
+    agent_id: str
+    tasks_completed: int
+    tasks_failed: int
+    average_response_time_ms: float
+    memory_usage_bytes: int
+    cpu_usage_percent: float
+    last_activity: datetime
+    uptime_seconds: int
