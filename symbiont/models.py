@@ -493,6 +493,121 @@ class AgentMetrics(BaseModel):
 
 
 # =============================================================================
+# Configuration Models (Phase 1)
+# =============================================================================
+
+class ClientConfig(BaseModel):
+    """Client configuration model."""
+    api_key: Optional[str] = None
+    base_url: str = "http://localhost:8080/api/v1"
+    timeout: int = 30
+    max_retries: int = 3
+    enable_caching: bool = True
+    enable_metrics: bool = True
+    enable_debug: bool = False
+
+
+class DatabaseConfig(BaseModel):
+    """Database connection configuration."""
+    host: str = "localhost"
+    port: int = 5432
+    database: str = "symbiont"
+    username: Optional[str] = None
+    password: Optional[str] = None
+    ssl_mode: str = "prefer"
+    connection_timeout: int = 30
+    max_connections: int = 20
+
+
+class AuthConfig(BaseModel):
+    """Authentication configuration."""
+    jwt_secret_key: Optional[str] = None
+    jwt_algorithm: str = "HS256"
+    jwt_expiration_seconds: int = 3600
+    jwt_refresh_expiration_seconds: int = 86400
+    api_key_header: str = "Authorization"
+    enable_refresh_tokens: bool = True
+    token_issuer: str = "symbiont"
+    token_audience: str = "symbiont-api"
+
+
+class VectorConfig(BaseModel):
+    """Vector database configuration."""
+    provider: str = "qdrant"
+    host: str = "localhost"
+    port: int = 6333
+    collection_name: str = "symbiont_vectors"
+    vector_size: int = 1536
+    distance_metric: str = "cosine"
+    enable_indexing: bool = True
+    batch_size: int = 100
+
+
+class LoggingConfig(BaseModel):
+    """Logging configuration."""
+    level: str = "INFO"
+    format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    file_path: Optional[str] = None
+    enable_console: bool = True
+    enable_structured: bool = False
+    max_file_size: str = "10MB"
+    backup_count: int = 5
+
+
+# =============================================================================
+# Authentication Models (Phase 1)
+# =============================================================================
+
+class JWTToken(BaseModel):
+    """JWT token model."""
+    token: str
+    token_type: str
+    expires_at: datetime
+    issued_at: datetime
+    user_id: str
+    roles: List[str] = []
+
+
+class AuthResponse(BaseModel):
+    """Authentication response."""
+    user_id: str
+    access_token: str
+    refresh_token: Optional[str] = None
+    token_type: str = "Bearer"
+    expires_in: int
+    roles: List[str] = []
+    permissions: List[str] = []
+
+
+class TokenRefreshRequest(BaseModel):
+    """Token refresh request."""
+    refresh_token: str
+
+
+class TokenRefreshResponse(BaseModel):
+    """Token refresh response."""
+    access_token: str
+    token_type: str = "Bearer"
+    expires_in: int
+
+
+class UserPermissions(BaseModel):
+    """User permissions model."""
+    user_id: str
+    roles: List[str]
+    permissions: List[str]
+    is_active: bool = True
+
+
+class RoleDefinition(BaseModel):
+    """Role definition model."""
+    name: str
+    permissions: List[str]
+    description: Optional[str] = None
+    expires_at: Optional[datetime] = None
+
+
+# =============================================================================
 # HTTP Input Models
 # =============================================================================
 

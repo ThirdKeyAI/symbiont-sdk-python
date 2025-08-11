@@ -70,3 +70,61 @@ class RateLimitError(SymbiontError):
         """
         super().__init__(message, 429)
         self.response_text = response_text
+
+
+# =============================================================================
+# Phase 1 New Exception Classes
+# =============================================================================
+
+class ConfigurationError(SymbiontError):
+    """Configuration-related errors."""
+
+    def __init__(self, message: str, config_key: str = None):
+        """Initialize the ConfigurationError.
+
+        Args:
+            message: Error message describing the configuration issue.
+            config_key: Optional configuration key that caused the error.
+        """
+        super().__init__(message)
+        self.config_key = config_key
+
+
+class AuthenticationExpiredError(AuthenticationError):
+    """Authentication expired error for expired tokens."""
+
+    def __init__(self, message: str = "Authentication token has expired", response_text: str = None):
+        """Initialize the AuthenticationExpiredError.
+
+        Args:
+            message: Error message describing the expiration.
+            response_text: Raw response text from the API.
+        """
+        super().__init__(message, response_text)
+
+
+class TokenRefreshError(AuthenticationError):
+    """Token refresh error for failed token refresh attempts."""
+
+    def __init__(self, message: str = "Failed to refresh authentication token", response_text: str = None):
+        """Initialize the TokenRefreshError.
+
+        Args:
+            message: Error message describing the refresh failure.
+            response_text: Raw response text from the API.
+        """
+        super().__init__(message, response_text)
+
+
+class PermissionDeniedError(SymbiontError):
+    """Permission denied error for insufficient privileges."""
+
+    def __init__(self, message: str = "Insufficient permissions for this operation", required_permission: str = None):
+        """Initialize the PermissionDeniedError.
+
+        Args:
+            message: Error message describing the permission issue.
+            required_permission: Optional required permission that was missing.
+        """
+        super().__init__(message, 403)
+        self.required_permission = required_permission
