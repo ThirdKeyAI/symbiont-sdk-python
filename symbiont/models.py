@@ -874,13 +874,107 @@ class EmbeddingRequest(BaseModel):
     model: str = Field("default", description="Embedding model to use")
     collection_name: Optional[str] = Field(None, description="Target collection")
     metadata: Optional[List[Dict[str, Any]]] = Field(None, description="Metadata for each text")
-
-
 class EmbeddingResponse(BaseModel):
     """Response from embedding generation."""
     embeddings: List[List[float]] = Field(..., description="Generated embeddings")
     model: str = Field(..., description="Model used for embedding")
     processing_time_ms: float = Field(..., description="Processing time in milliseconds")
     token_count: Optional[int] = Field(None, description="Total token count processed")
+
+
+# =============================================================================
+# Phase 4 HTTP Endpoint Management Models
+# =============================================================================
+
+class HttpMethod(str, Enum):
+    """HTTP method enumeration."""
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    DELETE = "DELETE"
+    PATCH = "PATCH"
+    HEAD = "HEAD"
+    OPTIONS = "OPTIONS"
+
+
+class EndpointStatus(str, Enum):
+    """HTTP endpoint status enumeration."""
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    MAINTENANCE = "maintenance"
+    ERROR = "error"
+
+
+class HttpEndpointCreateRequest(BaseModel):
+    """Request to create a new HTTP endpoint."""
+    path: str = Field(..., description="Endpoint path")
+    method: HttpMethod = Field(..., description="HTTP method")
+    agent_id: str = Field(..., description="Agent to handle requests")
+    description: Optional[str] = Field(None, description="Endpoint description")
+    auth_required: bool = Field(True, description="Whether authentication is required")
+    rate_limit: Optional[int] = Field(None, description="Rate limit per minute")
+    timeout_seconds: int = Field(30, description="Request timeout in seconds")
+    middleware: List[str] = Field(default_factory=list, description="Middleware to apply")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional endpoint metadata")
+
+
+class HttpEndpointUpdateRequest(BaseModel):
+    """Request to update an existing HTTP endpoint."""
+    endpoint_id: str = Field(..., description="Endpoint identifier")
+    path: Optional[str] = Field(None, description="Endpoint path")
+    method: Optional[HttpMethod] = Field(None, description="HTTP method")
+    agent_id: Optional[str] = Field(None, description="Agent to handle requests")
+    description: Optional[str] = Field(None, description="Endpoint description")
+    auth_required: Optional[bool] = Field(None, description="Whether authentication is required")
+    rate_limit: Optional[int] = Field(None, description="Rate limit per minute")
+    timeout_seconds: Optional[int] = Field(None, description="Request timeout in seconds")
+    status: Optional[EndpointStatus] = Field(None, description="Endpoint status")
+    middleware: Optional[List[str]] = Field(None, description="Middleware to apply")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional endpoint metadata")
+
+
+class EndpointMetrics(BaseModel):
+    """HTTP endpoint metrics."""
+    endpoint_id: str = Field(..., description="Endpoint identifier")
+    total_requests: int = Field(..., description="Total number of requests")
+    successful_requests: int = Field(..., description="Number of successful requests")
+    failed_requests: int = Field(..., description="Number of failed requests")
+    average_response_time_ms: float = Field(..., description="Average response time in milliseconds")
+    max_response_time_ms: float = Field(..., description="Maximum response time in milliseconds")
+    min_response_time_ms: float = Field(..., description="Minimum response time in milliseconds")
+    requests_per_minute: float = Field(..., description="Current requests per minute rate")
+    error_rate_percent: float = Field(..., description="Error rate percentage")
+    last_request_at: Optional[datetime] = Field(None, description="Timestamp of last request")
+    uptime_seconds: int = Field(..., description="Endpoint uptime in seconds")
+
+
+class HttpEndpointInfo(BaseModel):
+    """HTTP endpoint information."""
+    endpoint_id: str = Field(..., description="Endpoint identifier")
+    path: str = Field(..., description="Endpoint path")
+    method: HttpMethod = Field(..., description="HTTP method")
+    agent_id: str = Field(..., description="Agent handling requests")
+    description: Optional[str] = Field(None, description="Endpoint description")
+    status: EndpointStatus = Field(..., description="Current endpoint status")
+    auth_required: bool = Field(..., description="Whether authentication is required")
+    rate_limit: Optional[int] = Field(None, description="Rate limit per minute")
+    timeout_seconds: int = Field(..., description="Request timeout in seconds")
+    middleware: List[str] = Field(default_factory=list, description="Applied middleware")
+    created_at: datetime = Field(..., description="Endpoint creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
+    created_by: str = Field(..., description="User who created the endpoint")
+    metrics: Optional[EndpointMetrics] = Field(None, description="Endpoint metrics")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional endpoint metadata")
+
+
+class HttpEndpointResponse(BaseModel):
+    """Response from HTTP endpoint operations."""
+    endpoint_id: str = Field(..., description="Endpoint identifier")
+    status: str = Field(..., description="Operation status")
+    message: Optional[str] = Field(None, description="Operation message")
+    endpoint_info: Optional[HttpEndpointInfo] = Field(None, description="Endpoint information")
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+
+
 
 

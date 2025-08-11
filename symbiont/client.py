@@ -38,8 +38,14 @@ from .models import (
     # Agent DSL models
     DslCompileRequest,
     DslCompileResponse,
+    EndpointMetrics,
     # System models
     HealthResponse,
+    # Phase 4 HTTP Endpoint Management models
+    HttpEndpointCreateRequest,
+    HttpEndpointInfo,
+    HttpEndpointResponse,
+    HttpEndpointUpdateRequest,
     HttpInputCreateRequest,
     HttpInputServerInfo,
     HttpInputUpdateRequest,
@@ -1281,3 +1287,106 @@ class Client:
         """
         response = self._request("GET", f"vectors/collections/{collection_name}/count")
         return response.json()["count"]
+
+    # =============================================================================
+    # Phase 4 HTTP Endpoint Management Methods
+    # =============================================================================
+
+    def create_http_endpoint(self, endpoint_request: Union[HttpEndpointCreateRequest, Dict[str, Any]]) -> HttpEndpointResponse:
+        """Create a new HTTP endpoint.
+
+        Args:
+            endpoint_request: HTTP endpoint creation request
+
+        Returns:
+            HttpEndpointResponse: Endpoint creation result
+        """
+        if isinstance(endpoint_request, dict):
+            endpoint_request = HttpEndpointCreateRequest(**endpoint_request)
+
+        response = self._request("POST", "endpoints", json=endpoint_request.model_dump())
+        return HttpEndpointResponse(**response.json())
+
+    def list_http_endpoints(self) -> List[HttpEndpointInfo]:
+        """List all HTTP endpoints.
+
+        Returns:
+            List[HttpEndpointInfo]: List of endpoint information
+        """
+        response = self._request("GET", "endpoints")
+        return [HttpEndpointInfo(**endpoint) for endpoint in response.json()]
+
+    def update_http_endpoint(self, endpoint_request: Union[HttpEndpointUpdateRequest, Dict[str, Any]]) -> HttpEndpointResponse:
+        """Update an existing HTTP endpoint.
+
+        Args:
+            endpoint_request: HTTP endpoint update request
+
+        Returns:
+            HttpEndpointResponse: Endpoint update result
+        """
+        if isinstance(endpoint_request, dict):
+            endpoint_request = HttpEndpointUpdateRequest(**endpoint_request)
+
+        response = self._request("PUT", f"endpoints/{endpoint_request.endpoint_id}", json=endpoint_request.model_dump())
+        return HttpEndpointResponse(**response.json())
+
+    def delete_http_endpoint(self, endpoint_id: str) -> Dict[str, Any]:
+        """Delete an HTTP endpoint.
+
+        Args:
+            endpoint_id: The endpoint identifier
+
+        Returns:
+            Dict[str, Any]: Deletion confirmation
+        """
+        response = self._request("DELETE", f"endpoints/{endpoint_id}")
+        return response.json()
+
+    def get_http_endpoint(self, endpoint_id: str) -> HttpEndpointInfo:
+        """Get information about a specific HTTP endpoint.
+
+        Args:
+            endpoint_id: The endpoint identifier
+
+        Returns:
+            HttpEndpointInfo: Endpoint information
+        """
+        response = self._request("GET", f"endpoints/{endpoint_id}")
+        return HttpEndpointInfo(**response.json())
+
+    def get_endpoint_metrics(self, endpoint_id: str) -> EndpointMetrics:
+        """Get metrics for a specific HTTP endpoint.
+
+        Args:
+            endpoint_id: The endpoint identifier
+
+        Returns:
+            EndpointMetrics: Endpoint metrics information
+        """
+        response = self._request("GET", f"endpoints/{endpoint_id}/metrics")
+        return EndpointMetrics(**response.json())
+
+    def enable_http_endpoint(self, endpoint_id: str) -> Dict[str, Any]:
+        """Enable/activate an HTTP endpoint.
+
+        Args:
+            endpoint_id: The endpoint identifier
+
+        Returns:
+            Dict[str, Any]: Operation confirmation
+        """
+        response = self._request("POST", f"endpoints/{endpoint_id}/enable")
+        return response.json()
+
+    def disable_http_endpoint(self, endpoint_id: str) -> Dict[str, Any]:
+        """Disable/deactivate an HTTP endpoint.
+
+        Args:
+            endpoint_id: The endpoint identifier
+
+        Returns:
+            Dict[str, Any]: Operation confirmation
+        """
+        response = self._request("POST", f"endpoints/{endpoint_id}/disable")
+        return response.json()

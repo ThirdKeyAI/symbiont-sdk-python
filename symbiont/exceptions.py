@@ -165,3 +165,121 @@ class MemoryRetrievalError(MemoryError):
         """
         super().__init__(message)
         self.memory_id = memory_id
+
+
+# =============================================================================
+# Phase 3 Vector Database Exception Classes
+# =============================================================================
+
+class VectorDatabaseError(SymbiontError):
+    """Base exception for vector database errors."""
+    pass
+
+
+class QdrantConnectionError(VectorDatabaseError):
+    """Raised when Qdrant connection operations fail."""
+
+    def __init__(self, message: str = "Qdrant connection error", host: str = None):
+        """Initialize the QdrantConnectionError.
+
+        Args:
+            message: Error message describing the connection failure.
+            host: Optional Qdrant host that failed to connect.
+        """
+        super().__init__(message)
+        self.host = host
+
+
+class CollectionNotFoundError(VectorDatabaseError):
+    """Raised when a vector collection is not found."""
+
+    def __init__(self, message: str = "Vector collection not found", collection_name: str = None):
+        """Initialize the CollectionNotFoundError.
+
+        Args:
+            message: Error message describing the collection error.
+            collection_name: Optional collection name that was not found.
+        """
+        super().__init__(message, 404)
+        self.collection_name = collection_name
+
+
+class EmbeddingError(SymbiontError):
+    """Raised when embedding generation operations fail."""
+
+    def __init__(self, message: str = "Embedding generation error", model: str = None):
+        """Initialize the EmbeddingError.
+
+        Args:
+            message: Error message describing the embedding failure.
+            model: Optional embedding model that failed.
+        """
+        super().__init__(message)
+        self.model = model
+
+
+# =============================================================================
+# Phase 4 HTTP Endpoint Management Exception Classes
+# =============================================================================
+
+class EndpointError(SymbiontError):
+    """Base exception for HTTP endpoint management errors."""
+    pass
+
+
+class EndpointNotFoundError(EndpointError):
+    """Raised when an HTTP endpoint is not found."""
+
+    def __init__(self, message: str = "HTTP endpoint not found", endpoint_id: str = None):
+        """Initialize the EndpointNotFoundError.
+
+        Args:
+            message: Error message describing the endpoint error.
+            endpoint_id: Optional endpoint ID that was not found.
+        """
+        super().__init__(message, 404)
+        self.endpoint_id = endpoint_id
+
+
+class EndpointConflictError(EndpointError):
+    """Raised when an HTTP endpoint creation conflicts with existing endpoints."""
+
+    def __init__(self, message: str = "HTTP endpoint conflict", path: str = None, method: str = None):
+        """Initialize the EndpointConflictError.
+
+        Args:
+            message: Error message describing the endpoint conflict.
+            path: Optional endpoint path that conflicts.
+            method: Optional HTTP method that conflicts.
+        """
+        super().__init__(message, 409)
+        self.path = path
+        self.method = method
+
+
+class EndpointConfigurationError(EndpointError):
+    """Raised when HTTP endpoint configuration is invalid."""
+
+    def __init__(self, message: str = "Invalid endpoint configuration", config_field: str = None):
+        """Initialize the EndpointConfigurationError.
+
+        Args:
+            message: Error message describing the configuration issue.
+            config_field: Optional configuration field that is invalid.
+        """
+        super().__init__(message, 400)
+        self.config_field = config_field
+
+
+class EndpointRateLimitError(EndpointError):
+    """Raised when an HTTP endpoint rate limit is exceeded."""
+
+    def __init__(self, message: str = "Endpoint rate limit exceeded", endpoint_id: str = None):
+        """Initialize the EndpointRateLimitError.
+
+        Args:
+            message: Error message describing the rate limit violation.
+            endpoint_id: Optional endpoint ID that exceeded the rate limit.
+        """
+        super().__init__(message, 429)
+        self.endpoint_id = endpoint_id
