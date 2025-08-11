@@ -26,6 +26,10 @@ from .models import (
     AgentMetrics,
     AgentStatusResponse,
     AnalysisResults,
+    # Phase 3 Qdrant Integration models
+    CollectionCreateRequest,
+    CollectionInfo,
+    CollectionResponse,
     ConsolidationResponse,
     # Configuration models (Phase 1)
     ContextQuery,
@@ -66,8 +70,10 @@ from .models import (
     SigningRequest,
     SigningResponse,
     SystemMetrics,
+    UpsertResponse,
     VectorSearchRequest,
     VectorSearchResponse,
+    VectorUpsertRequest,
     WebhookTriggerRequest,
     WebhookTriggerResponse,
     WorkflowExecutionRequest,
@@ -1147,3 +1153,131 @@ class Client:
         }
         response = self._request("GET", "memory/agent", params=params)
         return MemorySearchResponse(**response.json())
+
+    # =============================================================================
+    # Phase 3 Qdrant Vector Database Methods
+    # =============================================================================
+
+    def create_vector_collection(self, collection_request: Union[CollectionCreateRequest, Dict[str, Any]]) -> CollectionResponse:
+        """Create a new vector collection.
+
+        Args:
+            collection_request: Collection creation request
+
+        Returns:
+            CollectionResponse: Collection creation result
+        """
+        if isinstance(collection_request, dict):
+            collection_request = CollectionCreateRequest(**collection_request)
+
+        response = self._request("POST", "vectors/collections", json=collection_request.model_dump())
+        return CollectionResponse(**response.json())
+
+    def delete_vector_collection(self, collection_name: str) -> Dict[str, Any]:
+        """Delete a vector collection.
+
+        Args:
+            collection_name: Name of the collection to delete
+
+        Returns:
+            Dict[str, Any]: Deletion confirmation
+        """
+        response = self._request("DELETE", f"vectors/collections/{collection_name}")
+        return response.json()
+
+    def get_collection_info(self, collection_name: str) -> CollectionInfo:
+        """Get information about a vector collection.
+
+        Args:
+            collection_name: Name of the collection
+
+        Returns:
+            CollectionInfo: Collection information
+        """
+        response = self._request("GET", f"vectors/collections/{collection_name}")
+        return CollectionInfo(**response.json())
+
+    def list_vector_collections(self) -> List[str]:
+        """List all vector collections.
+
+        Returns:
+            List[str]: List of collection names
+        """
+        response = self._request("GET", "vectors/collections")
+        return response.json()
+
+    def add_vectors(self, upsert_request: Union[VectorUpsertRequest, Dict[str, Any]]) -> UpsertResponse:
+        """Add vectors to a collection.
+
+        Args:
+            upsert_request: Vector upsert request
+
+        Returns:
+            UpsertResponse: Upsert operation result
+        """
+        if isinstance(upsert_request, dict):
+            upsert_request = VectorUpsertRequest(**upsert_request)
+
+        response = self._request("POST", "vectors/upsert", json=upsert_request.model_dump())
+        return UpsertResponse(**response.json())
+
+    def get_vectors(self, collection_name: str, vector_ids: List[Union[str, int]]) -> List[Dict[str, Any]]:
+        """Get vectors by IDs from a collection.
+
+        Args:
+            collection_name: Name of the collection
+            vector_ids: List of vector IDs to retrieve
+
+        Returns:
+            List[Dict[str, Any]]: Retrieved vectors
+        """
+        params = {
+            "collection_name": collection_name,
+            "ids": vector_ids
+        }
+        response = self._request("GET", "vectors/retrieve", params=params)
+        return response.json()
+
+    def search_vectors(self, search_request: Union[VectorSearchRequest, Dict[str, Any]]) -> VectorSearchResponse:
+        """Search vectors using similarity search.
+
+        Args:
+            search_request: Vector search request
+
+        Returns:
+            VectorSearchResponse: Search results
+        """
+        if isinstance(search_request, dict):
+            search_request = VectorSearchRequest(**search_request)
+
+        response = self._request("POST", "vectors/search", json=search_request.model_dump())
+        return VectorSearchResponse(**response.json())
+
+    def delete_vectors(self, collection_name: str, vector_ids: List[Union[str, int]]) -> Dict[str, Any]:
+        """Delete vectors from a collection.
+
+        Args:
+            collection_name: Name of the collection
+            vector_ids: List of vector IDs to delete
+
+        Returns:
+            Dict[str, Any]: Deletion confirmation
+        """
+        data = {
+            "collection_name": collection_name,
+            "ids": vector_ids
+        }
+        response = self._request("DELETE", "vectors/delete", json=data)
+        return response.json()
+
+    def count_vectors(self, collection_name: str) -> int:
+        """Count vectors in a collection.
+
+        Args:
+            collection_name: Name of the collection
+
+        Returns:
+            int: Number of vectors in the collection
+        """
+        response = self._request("GET", f"vectors/collections/{collection_name}/count")
+        return response.json()["count"]

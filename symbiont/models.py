@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -788,3 +788,99 @@ class MemorySearchResult(BaseModel):
     relevance_score: float = Field(..., description="Relevance score for the search query")
     match_reason: str = Field(..., description="Reason for the match")
     highlighted_content: Optional[Dict[str, Any]] = Field(None, description="Content with search highlights")
+
+
+# =============================================================================
+# Phase 3 Qdrant Integration Models
+# =============================================================================
+
+class Vector(BaseModel):
+    """Vector representation for Qdrant."""
+    id: Union[str, int] = Field(..., description="Vector identifier")
+    values: List[float] = Field(..., description="Vector values/embeddings")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Vector metadata")
+
+
+class Point(BaseModel):
+    """Point representation for Qdrant."""
+    id: Union[str, int] = Field(..., description="Point identifier")
+    vector: Union[List[float], Dict[str, List[float]]] = Field(..., description="Vector data")
+    payload: Dict[str, Any] = Field(default_factory=dict, description="Point payload/metadata")
+
+
+class SearchQuery(BaseModel):
+    """Search query for vector similarity search."""
+    vector: List[float] = Field(..., description="Query vector")
+    limit: int = Field(10, description="Maximum number of results")
+    score_threshold: Optional[float] = Field(None, description="Minimum similarity score")
+    filter: Optional[Dict[str, Any]] = Field(None, description="Payload filter conditions")
+    with_payload: bool = Field(True, description="Include payload in results")
+    with_vector: bool = Field(False, description="Include vectors in results")
+
+
+class CollectionCreateRequest(BaseModel):
+    """Request to create a new vector collection."""
+    name: str = Field(..., description="Collection name")
+    vector_size: int = Field(..., description="Vector dimension size")
+    distance: str = Field("Cosine", description="Distance metric (Cosine, Euclidean, Dot)")
+    on_disk_payload: bool = Field(False, description="Store payload on disk")
+    hnsw_config: Optional[Dict[str, Any]] = Field(None, description="HNSW configuration")
+    optimizers_config: Optional[Dict[str, Any]] = Field(None, description="Optimizer configuration")
+
+
+class CollectionResponse(BaseModel):
+    """Response from collection operations."""
+    collection_name: str = Field(..., description="Collection name")
+    status: str = Field(..., description="Operation status")
+    result: Optional[Dict[str, Any]] = Field(None, description="Operation result details")
+
+
+class CollectionInfo(BaseModel):
+    """Information about a vector collection."""
+    collection_name: str = Field(..., description="Collection name")
+    config: Dict[str, Any] = Field(..., description="Collection configuration")
+    status: str = Field(..., description="Collection status")
+    vectors_count: int = Field(..., description="Number of vectors")
+    indexed_vectors_count: int = Field(..., description="Number of indexed vectors")
+    points_count: int = Field(..., description="Number of points")
+
+
+class VectorUpsertRequest(BaseModel):
+    """Request to upsert vectors into a collection."""
+    collection_name: str = Field(..., description="Target collection name")
+    points: List[Point] = Field(..., description="Points to upsert")
+    wait: bool = Field(True, description="Wait for operation completion")
+
+
+class UpsertResponse(BaseModel):
+    """Response from vector upsert operation."""
+    collection_name: str = Field(..., description="Collection name")
+    operation_id: Optional[str] = Field(None, description="Operation identifier")
+    status: str = Field(..., description="Operation status")
+    points_count: int = Field(..., description="Number of points processed")
+
+
+class VectorPoint(BaseModel):
+    """Vector point with metadata."""
+    id: Union[str, int] = Field(..., description="Point identifier")
+    vector: List[float] = Field(..., description="Vector values")
+    payload: Dict[str, Any] = Field(default_factory=dict, description="Point metadata")
+    score: Optional[float] = Field(None, description="Similarity score (for search results)")
+
+
+class EmbeddingRequest(BaseModel):
+    """Request to generate embeddings."""
+    texts: List[str] = Field(..., description="Texts to embed")
+    model: str = Field("default", description="Embedding model to use")
+    collection_name: Optional[str] = Field(None, description="Target collection")
+    metadata: Optional[List[Dict[str, Any]]] = Field(None, description="Metadata for each text")
+
+
+class EmbeddingResponse(BaseModel):
+    """Response from embedding generation."""
+    embeddings: List[List[float]] = Field(..., description="Generated embeddings")
+    model: str = Field(..., description="Model used for embedding")
+    processing_time_ms: float = Field(..., description="Processing time in milliseconds")
+    token_count: Optional[int] = Field(None, description="Total token count processed")
+
+
