@@ -1,14 +1,16 @@
-from setuptools import setup, find_packages
 import os
+
+from setuptools import find_packages, setup
+
 
 # Read README.md for long description
 def read_readme():
-    with open(os.path.join(os.path.dirname(__file__), 'README.md'), 'r', encoding='utf-8') as f:
+    with open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as f:
         return f.read()
 
 # Read requirements.txt for install_requires
 def read_requirements():
-    with open(os.path.join(os.path.dirname(__file__), 'requirements.txt'), 'r', encoding='utf-8') as f:
+    with open(os.path.join(os.path.dirname(__file__), 'requirements.txt'), encoding='utf-8') as f:
         return [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
 setup(

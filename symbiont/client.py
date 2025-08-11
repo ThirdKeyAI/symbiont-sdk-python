@@ -26,9 +26,11 @@ from .models import (
     AgentMetrics,
     AgentStatusResponse,
     AnalysisResults,
+    ConsolidationResponse,
     # Configuration models (Phase 1)
     ContextQuery,
     ContextResponse,
+    ConversationContext,
     # Agent DSL models
     DslCompileRequest,
     DslCompileResponse,
@@ -45,6 +47,12 @@ from .models import (
     # MCP Management models
     McpServerConfig,
     McpToolInfo,
+    MemoryQuery,
+    MemoryResponse,
+    MemorySearchRequest,
+    MemorySearchResponse,
+    # Phase 2 Memory System models
+    MemoryStoreRequest,
     ReviewSession,
     ReviewSessionCreate,
     ReviewSessionList,
@@ -1032,3 +1040,110 @@ class Client:
         """
         response = self._request("GET", f"http-input/servers/{server_id}/metrics")
         return response.json()
+
+    # =============================================================================
+    # Phase 2 Memory System Methods
+    # =============================================================================
+
+    def add_memory(self, memory_request: Union[MemoryStoreRequest, Dict[str, Any]]) -> MemoryResponse:
+        """Store a new memory in the system.
+
+        Args:
+            memory_request: Memory storage request
+
+        Returns:
+            MemoryResponse: Memory storage response
+        """
+        if isinstance(memory_request, dict):
+            memory_request = MemoryStoreRequest(**memory_request)
+
+        response = self._request("POST", "memory", json=memory_request.model_dump())
+        return MemoryResponse(**response.json())
+
+    def get_memory(self, memory_query: Union[MemoryQuery, Dict[str, Any]]) -> MemoryResponse:
+        """Retrieve a specific memory.
+
+        Args:
+            memory_query: Memory query parameters
+
+        Returns:
+            MemoryResponse: Memory retrieval response
+        """
+        if isinstance(memory_query, dict):
+            memory_query = MemoryQuery(**memory_query)
+
+        response = self._request("GET", "memory", params=memory_query.model_dump(exclude_none=True))
+        return MemoryResponse(**response.json())
+
+    def search_memory(self, search_request: Union[MemorySearchRequest, Dict[str, Any]]) -> MemorySearchResponse:
+        """Search for memories matching criteria.
+
+        Args:
+            search_request: Memory search request
+
+        Returns:
+            MemorySearchResponse: Search results
+        """
+        if isinstance(search_request, dict):
+            search_request = MemorySearchRequest(**search_request)
+
+        response = self._request("POST", "memory/search", json=search_request.model_dump())
+        return MemorySearchResponse(**response.json())
+
+    def consolidate_memory(self, agent_id: str) -> ConsolidationResponse:
+        """Consolidate memories for an agent.
+
+        Args:
+            agent_id: The agent identifier
+
+        Returns:
+            ConsolidationResponse: Consolidation process results
+        """
+        response = self._request("POST", f"memory/consolidate/{agent_id}")
+        return ConsolidationResponse(**response.json())
+
+    def get_conversation_context(self, conversation_id: str, agent_id: str) -> ConversationContext:
+        """Get conversation context with associated memories.
+
+        Args:
+            conversation_id: The conversation identifier
+            agent_id: The agent identifier
+
+        Returns:
+            ConversationContext: Conversation context with memories
+        """
+        params = {
+            "conversation_id": conversation_id,
+            "agent_id": agent_id
+        }
+        response = self._request("GET", "memory/conversation", params=params)
+        return ConversationContext(**response.json())
+
+    def delete_memory(self, memory_id: str) -> Dict[str, Any]:
+        """Delete a memory by ID.
+
+        Args:
+            memory_id: The memory identifier
+
+        Returns:
+            Dict[str, Any]: Deletion confirmation
+        """
+        response = self._request("DELETE", f"memory/{memory_id}")
+        return response.json()
+
+    def list_agent_memories(self, agent_id: str, limit: int = 100) -> MemorySearchResponse:
+        """List all memories for an agent.
+
+        Args:
+            agent_id: The agent identifier
+            limit: Maximum number of memories to return
+
+        Returns:
+            MemorySearchResponse: List of agent memories
+        """
+        params = {
+            "agent_id": agent_id,
+            "limit": limit
+        }
+        response = self._request("GET", "memory/agent", params=params)
+        return MemorySearchResponse(**response.json())

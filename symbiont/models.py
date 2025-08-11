@@ -687,3 +687,104 @@ class WebhookTriggerResponse(BaseModel):
     response_body: Dict[str, Any]
     processing_time_ms: float
     agent_id: str
+
+
+# =============================================================================
+# Phase 2 Memory System Models
+# =============================================================================
+
+class MemoryNode(BaseModel):
+    """Individual memory item with metadata and content."""
+    id: str = Field(..., description="Unique memory identifier")
+    content: Dict[str, Any] = Field(..., description="Memory content")
+    memory_type: str = Field(..., description="Type of memory (conversation, fact, experience, context, metadata)")
+    memory_level: str = Field(..., description="Memory hierarchy level (short_term, long_term, episodic, semantic)")
+    timestamp: datetime = Field(..., description="Memory creation timestamp")
+    agent_id: str = Field(..., description="Agent that owns this memory")
+    conversation_id: Optional[str] = Field(None, description="Associated conversation ID")
+    parent_id: Optional[str] = Field(None, description="Parent memory ID")
+    children_ids: List[str] = Field(default_factory=list, description="Child memory IDs")
+    importance_score: float = Field(0.0, description="Memory importance score (0.0-1.0)")
+    access_count: int = Field(0, description="Number of times memory was accessed")
+    last_accessed: Optional[datetime] = Field(None, description="Last access timestamp")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
+
+class MemoryStoreRequest(BaseModel):
+    """Request to store a memory."""
+    content: Dict[str, Any] = Field(..., description="Memory content")
+    memory_type: str = Field(..., description="Type of memory")
+    memory_level: str = Field(..., description="Memory hierarchy level")
+    agent_id: str = Field(..., description="Agent ID")
+    conversation_id: Optional[str] = Field(None, description="Conversation ID")
+    importance_score: float = Field(0.0, description="Memory importance score")
+    parent_id: Optional[str] = Field(None, description="Parent memory ID")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
+
+class MemoryResponse(BaseModel):
+    """Response containing memory information."""
+    memory: MemoryNode = Field(..., description="Memory node")
+    success: bool = Field(True, description="Operation success status")
+    message: Optional[str] = Field(None, description="Response message")
+
+
+class MemoryQuery(BaseModel):
+    """Query for retrieving specific memories."""
+    memory_id: Optional[str] = Field(None, description="Specific memory ID")
+    agent_id: str = Field(..., description="Agent ID")
+    conversation_id: Optional[str] = Field(None, description="Conversation ID")
+    memory_type: Optional[str] = Field(None, description="Memory type filter")
+    memory_level: Optional[str] = Field(None, description="Memory level filter")
+    parent_id: Optional[str] = Field(None, description="Parent memory ID")
+    limit: int = Field(50, description="Maximum number of results")
+
+
+class MemorySearchRequest(BaseModel):
+    """Request for searching memories."""
+    agent_id: str = Field(..., description="Agent ID")
+    query: Optional[Dict[str, Any]] = Field(None, description="Search query parameters")
+    memory_levels: Optional[List[str]] = Field(None, description="Memory levels to search")
+    content_contains: Optional[str] = Field(None, description="Content search string")
+    importance_threshold: Optional[float] = Field(None, description="Minimum importance score")
+    time_range: Optional[Dict[str, datetime]] = Field(None, description="Time range filter")
+    limit: int = Field(50, description="Maximum number of results")
+
+
+class MemorySearchResponse(BaseModel):
+    """Response containing search results."""
+    memories: List[MemoryNode] = Field(..., description="Found memories")
+    total_count: int = Field(..., description="Total number of matches")
+    search_time_ms: float = Field(..., description="Search execution time in milliseconds")
+    success: bool = Field(True, description="Search success status")
+    message: Optional[str] = Field(None, description="Response message")
+
+
+class ConversationContext(BaseModel):
+    """Conversation-specific memory context."""
+    conversation_id: str = Field(..., description="Conversation identifier")
+    agent_id: str = Field(..., description="Agent identifier")
+    memories: List[MemoryNode] = Field(..., description="Conversation memories")
+    context_summary: Optional[str] = Field(None, description="Context summary")
+    created_at: datetime = Field(default_factory=datetime.now, description="Context creation time")
+    updated_at: datetime = Field(default_factory=datetime.now, description="Last update time")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional context metadata")
+
+
+class ConsolidationResponse(BaseModel):
+    """Response from memory consolidation process."""
+    agent_id: str = Field(..., description="Agent ID")
+    promoted_count: int = Field(0, description="Number of memories promoted")
+    pruned_count: int = Field(0, description="Number of memories pruned")
+    consolidated_count: int = Field(0, description="Number of memories consolidated")
+    execution_time_ms: float = Field(..., description="Consolidation execution time")
+    success: bool = Field(True, description="Consolidation success status")
+    message: Optional[str] = Field(None, description="Response message")
+
+
+class MemorySearchResult(BaseModel):
+    """Individual memory search result with relevance scoring."""
+    memory: MemoryNode = Field(..., description="Memory node")
+    relevance_score: float = Field(..., description="Relevance score for the search query")
+    match_reason: str = Field(..., description="Reason for the match")
+    highlighted_content: Optional[Dict[str, Any]] = Field(None, description="Content with search highlights")

@@ -128,3 +128,40 @@ class PermissionDeniedError(SymbiontError):
         """
         super().__init__(message, 403)
         self.required_permission = required_permission
+
+
+# =============================================================================
+# Phase 2 Memory System Exception Classes
+# =============================================================================
+
+class MemoryError(SymbiontError):
+    """Base exception for memory system errors."""
+    pass
+
+
+class MemoryStorageError(MemoryError):
+    """Raised when memory storage operations fail."""
+
+    def __init__(self, message: str = "Memory storage error", storage_type: str = None):
+        """Initialize the MemoryStorageError.
+
+        Args:
+            message: Error message describing the storage failure.
+            storage_type: Optional storage backend type that failed.
+        """
+        super().__init__(message)
+        self.storage_type = storage_type
+
+
+class MemoryRetrievalError(MemoryError):
+    """Raised when memory retrieval operations fail."""
+
+    def __init__(self, message: str = "Memory retrieval error", memory_id: str = None):
+        """Initialize the MemoryRetrievalError.
+
+        Args:
+            message: Error message describing the retrieval failure.
+            memory_id: Optional memory ID that failed to retrieve.
+        """
+        super().__init__(message)
+        self.memory_id = memory_id

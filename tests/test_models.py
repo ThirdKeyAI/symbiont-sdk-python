@@ -2,6 +2,7 @@
 
 import pytest
 from pydantic import ValidationError
+
 from symbiont import Agent
 
 
@@ -21,9 +22,9 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": 2000
         }
-        
+
         agent = Agent(**agent_data)
-        
+
         assert agent.id == "agent-123"
         assert agent.name == "Test Agent"
         assert agent.description == "A test agent for validation"
@@ -47,9 +48,9 @@ class TestAgentModel:
             "top_p": 0.1,
             "max_tokens": 100
         }
-        
+
         agent = Agent(**agent_data)
-        
+
         assert agent.id == "minimal-agent"
         assert agent.name == "Minimal Agent"
         assert agent.tools == []
@@ -69,10 +70,10 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["type"] == "missing"
@@ -90,10 +91,10 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["type"] == "missing"
@@ -111,10 +112,10 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["type"] == "missing"
@@ -132,10 +133,10 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["type"] == "missing"
@@ -153,10 +154,10 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["type"] == "missing"
@@ -174,10 +175,10 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["type"] == "missing"
@@ -195,10 +196,10 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["type"] == "missing"
@@ -216,10 +217,10 @@ class TestAgentModel:
             "temperature": 0.7,
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["type"] == "missing"
@@ -237,10 +238,10 @@ class TestAgentModel:
             "temperature": 0.7,
             "top_p": 0.9
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["type"] == "missing"
@@ -252,13 +253,13 @@ class TestAgentModel:
             "id": "agent-123",
             # Missing: name, description, system_prompt, tools, model, temperature, top_p, max_tokens
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 8  # All fields except 'id' are missing
-        
+
         missing_fields = {error["loc"][0] for error in errors}
         expected_missing = {"name", "description", "system_prompt", "tools", "model", "temperature", "top_p", "max_tokens"}
         assert missing_fields == expected_missing
@@ -276,10 +277,10 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["loc"] == ("temperature",)
@@ -298,10 +299,10 @@ class TestAgentModel:
             "top_p": "invalid",  # Should be float
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["loc"] == ("top_p",)
@@ -320,10 +321,10 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": "invalid"  # Should be int
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["loc"] == ("max_tokens",)
@@ -342,10 +343,10 @@ class TestAgentModel:
             "top_p": 0.9,
             "max_tokens": 2000
         }
-        
+
         with pytest.raises(ValidationError) as exc_info:
             Agent(**agent_data)
-        
+
         errors = exc_info.value.errors()
         assert len(errors) == 1
         assert errors[0]["loc"] == ("tools",)
