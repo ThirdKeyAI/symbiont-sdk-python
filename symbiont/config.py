@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
 import yaml
-from pydantic import BaseModel, Field, validator
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel, Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class ConfigSource(str, Enum):
@@ -19,8 +19,9 @@ class ConfigSource(str, Enum):
     DEFAULT = "default"
 
 
-class DatabaseConfig(BaseModel):
+class DatabaseConfig(BaseSettings):
     """Database connection configuration."""
+    model_config = SettingsConfigDict(env_prefix="SYMBIONT_DB_")
     host: str = "localhost"
     port: int = 5432
     database: str = "symbiont"
@@ -31,8 +32,9 @@ class DatabaseConfig(BaseModel):
     max_connections: int = 20
 
 
-class AuthConfig(BaseModel):
+class AuthConfig(BaseSettings):
     """Authentication configuration."""
+    model_config = SettingsConfigDict(env_prefix="SYMBIONT_AUTH_", case_sensitive=False)
     jwt_secret_key: Optional[str] = None
     jwt_algorithm: str = "HS256"
     jwt_expiration_seconds: int = 3600
@@ -43,8 +45,9 @@ class AuthConfig(BaseModel):
     token_audience: str = "symbiont-api"
 
 
-class VectorConfig(BaseModel):
+class VectorConfig(BaseSettings):
     """Vector database configuration."""
+    model_config = SettingsConfigDict(env_prefix="SYMBIONT_VECTOR_")
     provider: str = "qdrant"
     host: str = "localhost"
     port: int = 6333
@@ -55,8 +58,9 @@ class VectorConfig(BaseModel):
     batch_size: int = 100
 
 
-class LoggingConfig(BaseModel):
+class LoggingConfig(BaseSettings):
     """Logging configuration."""
+    model_config = SettingsConfigDict(env_prefix="SYMBIONT_LOGGING_")
     level: str = "INFO"
     format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     file_path: Optional[str] = None
@@ -70,10 +74,10 @@ class ClientConfig(BaseSettings):
     """Main client configuration class."""
 
     # API Configuration
-    api_key: Optional[str] = Field(None, env="SYMBIONT_API_KEY")
-    base_url: str = Field("http://localhost:8080/api/v1", env="SYMBIONT_BASE_URL")
-    timeout: int = Field(30, env="SYMBIONT_TIMEOUT")
-    max_retries: int = Field(3, env="SYMBIONT_MAX_RETRIES")
+    api_key: Optional[str] = Field(None)
+    base_url: str = Field("http://localhost:8080/api/v1")
+    timeout: int = Field(30)
+    max_retries: int = Field(3)
 
     # Component configurations
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
@@ -82,16 +86,19 @@ class ClientConfig(BaseSettings):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
 
     # Feature flags
-    enable_caching: bool = Field(True, env="SYMBIONT_ENABLE_CACHING")
-    enable_metrics: bool = Field(True, env="SYMBIONT_ENABLE_METRICS")
-    enable_debug: bool = Field(False, env="SYMBIONT_DEBUG")
+    enable_caching: bool = Field(True)
+    enable_metrics: bool = Field(True)
+    enable_debug: bool = Field(False)
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        env_prefix="SYMBIONT_"
+    )
 
-    @validator('base_url')
+    @field_validator('base_url')
+    @classmethod
     def validate_base_url(cls, v):
         """Validate and normalize base URL."""
         if v:
@@ -150,7 +157,7 @@ class ConfigManager:
         self._config = ClientConfig(**config_dict)
 
         # Track environment variable sources
-        for field_name in self._config.__fields__:
+        for field_name in self._config.model_fields:
             env_var = f"SYMBIONT_{field_name.upper()}"
             if env_var in os.environ:
                 self._sources[field_name] = ConfigSource.ENVIRONMENT
@@ -243,7 +250,7 @@ class ConfigManager:
         """
         if not self._config:
             raise RuntimeError("Configuration not loaded. Call load() first.")
-        return self._config.dict()
+        return self._config.model_dump()
 
     def save_to_file(self, file_path: Union[str, Path],
                      format: str = "yaml",
@@ -258,7 +265,7 @@ class ConfigManager:
         if not self._config:
             raise RuntimeError("Configuration not loaded. Call load() first.")
 
-        config_dict = self._config.dict()
+        config_dict = self._config.model_dump()
 
         if exclude_secrets:
             # Remove sensitive fields

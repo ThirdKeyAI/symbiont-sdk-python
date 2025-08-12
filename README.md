@@ -77,13 +77,25 @@ docker run -it --rm symbiont-sdk:local
 
 ## Configuration
 
-The SDK can be configured using environment variables in a `.env` file. Copy the provided `.env.example` file to get started:
+The SDK features a comprehensive configuration system that supports multiple sources including environment variables, configuration files (YAML/JSON), and programmatic configuration. The system provides centralized management with validation and hot-reloading capabilities.
+
+### Configuration Sources
+
+1. **Environment Variables** - Loaded automatically from `.env` files or system environment
+2. **Configuration Files** - YAML or JSON files with structured configuration
+3. **Programmatic Configuration** - Direct configuration objects in your code
+
+### Basic Configuration
+
+Copy the provided `.env.example` file to get started:
 
 ```bash
 cp .env.example .env
 ```
 
-### Supported Environment Variables
+### Environment Variables
+
+All configuration options can be set using environment variables with the `SYMBIONT_` prefix:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -91,17 +103,209 @@ cp .env.example .env
 | `SYMBIONT_BASE_URL` | Base URL for the Symbiont API | `http://localhost:8080/api/v1` |
 | `SYMBIONT_TIMEOUT` | Request timeout in seconds | `30` |
 | `SYMBIONT_MAX_RETRIES` | Maximum retries for API calls | `3` |
+| `SYMBIONT_AUTH_JWT_SECRET_KEY` | JWT secret key for token validation | None |
+| `SYMBIONT_AUTH_JWT_ALGORITHM` | JWT algorithm | `HS256` |
+| `SYMBIONT_DB_HOST` | Database host | `localhost` |
+| `SYMBIONT_DB_PORT` | Database port | `5432` |
+| `SYMBIONT_VECTOR_HOST` | Vector database host | `localhost` |
+| `SYMBIONT_VECTOR_PORT` | Vector database port | `6333` |
+| `SYMBIONT_LOGGING_LEVEL` | Logging level | `INFO` |
 
-### Example `.env` Configuration
+### Configuration File Example
 
-```env
+Create a `config.yml` file for structured configuration:
+
+```yaml
 # API Configuration
-SYMBIONT_API_KEY=your_api_key_here
-SYMBIONT_BASE_URL=http://localhost:8080/api/v1
+api_key: "your_api_key_here"
+base_url: "http://localhost:8080/api/v1"
+timeout: 30
+max_retries: 3
 
-# Optional Settings
-SYMBIONT_TIMEOUT=30
-SYMBIONT_MAX_RETRIES=3
+# Authentication Configuration
+auth:
+  jwt_secret_key: "your-jwt-secret-key"
+  jwt_algorithm: "HS256"
+  jwt_expiration_seconds: 3600
+  enable_refresh_tokens: true
+
+# Database Configuration
+database:
+  host: "localhost"
+  port: 5432
+  database: "symbiont"
+  username: "user"
+  password: "password"
+
+# Vector Database Configuration
+vector:
+  provider: "qdrant"
+  host: "localhost"
+  port: 6333
+  collection_name: "symbiont_vectors"
+  vector_size: 1536
+  distance_metric: "cosine"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  enable_console: true
+  enable_structured: false
+```
+
+### Programmatic Configuration
+
+```python
+from symbiont import ClientConfig, AuthConfig, VectorConfig
+
+# Create configuration programmatically
+config = ClientConfig(
+    api_key="your_api_key",
+    base_url="http://localhost:8080/api/v1",
+    auth=AuthConfig(
+        jwt_secret_key="your-secret-key",
+        enable_refresh_tokens=True
+    ),
+    vector=VectorConfig(
+        host="localhost",
+        port=6333,
+        collection_name="my_vectors"
+    )
+)
+
+# Initialize client with configuration
+client = Client(config=config)
+```
+
+### Configuration Loading Priority
+
+Configuration values are loaded in the following priority order (highest to lowest):
+
+1. **Explicit parameters** passed to `Client()`
+2. **Environment variables** with `SYMBIONT_` prefix
+3. **Configuration file** values (if specified)
+4. **Default values**
+
+### Using Configuration Manager
+
+```python
+from symbiont import ConfigManager
+
+# Load configuration from file
+config_manager = ConfigManager()
+config = config_manager.load("config.yml")
+
+# Access configuration
+print(f"API URL: {config.base_url}")
+print(f"JWT enabled: {config.auth.enable_refresh_tokens}")
+
+# Reload configuration (hot-reload)
+updated_config = config_manager.reload()
+```
+
+## Authentication
+
+The SDK provides a comprehensive authentication system supporting multiple authentication methods including API keys, JWT tokens, and role-based access control (RBAC).
+
+### Authentication Methods
+
+- **API Key Authentication** - Simple bearer token authentication
+- **JWT (JSON Web Tokens)** - Secure token-based authentication with expiration and refresh
+- **Role-Based Access Control** - Granular permissions system with predefined and custom roles
+
+### JWT Authentication
+
+The SDK includes full JWT support with automatic token refresh and validation:
+
+```python
+from symbiont import Client, AuthConfig, ClientConfig
+
+# Configure JWT authentication
+config = ClientConfig(
+    auth=AuthConfig(
+        jwt_secret_key="your-secret-key",
+        jwt_algorithm="HS256",
+        jwt_expiration_seconds=3600,
+        enable_refresh_tokens=True
+    )
+)
+
+client = Client(config=config)
+
+# Authenticate with JWT token
+auth_response = client.authenticate_jwt("your-jwt-token")
+print(f"Authenticated user: {auth_response['user_id']}")
+print(f"Roles: {auth_response['roles']}")
+
+# Get current user roles
+user_roles = client.get_user_roles()
+print(f"Current user roles: {user_roles}")
+
+# Validate permissions for specific actions
+can_write = client.validate_permissions("write", "documents")
+print(f"Can write to documents: {can_write}")
+
+# Refresh access token
+refresh_response = client.refresh_token()
+print(f"New access token: {refresh_response['access_token']}")
+```
+
+### Role-Based Access Control
+
+The authentication system includes a flexible RBAC system with predefined roles:
+
+```python
+from symbiont.auth import AuthManager, Role, Permission
+
+# Available permissions
+permissions = [
+    Permission.READ,      # Read access
+    Permission.WRITE,     # Write access
+    Permission.DELETE,    # Delete access
+    Permission.EXECUTE,   # Execute access
+    Permission.ADMIN      # Administrative access
+]
+
+# Predefined roles
+# - admin: Full system access (all permissions)
+# - user: Standard user access (read, write, execute)
+# - readonly: Read-only access
+
+# Create custom role
+custom_role = Role(
+    name="data_analyst",
+    permissions={Permission.READ, Permission.EXECUTE},
+    description="Can read data and execute analysis"
+)
+
+# Register custom role with AuthManager
+auth_manager = AuthManager(config.auth)
+auth_manager.create_role(custom_role)
+```
+
+### Authentication Configuration
+
+Configure authentication in your configuration file:
+
+```yaml
+auth:
+  jwt_secret_key: "your-secret-key-here"
+  jwt_algorithm: "HS256"
+  jwt_expiration_seconds: 3600        # 1 hour
+  jwt_refresh_expiration_seconds: 86400  # 24 hours
+  enable_refresh_tokens: true
+  token_issuer: "symbiont"
+  token_audience: "symbiont-api"
+  api_key_header: "Authorization"
+```
+
+Or using environment variables:
+
+```bash
+SYMBIONT_AUTH_JWT_SECRET_KEY=your-secret-key
+SYMBIONT_AUTH_JWT_ALGORITHM=HS256
+SYMBIONT_AUTH_JWT_EXPIRATION_SECONDS=3600
+SYMBIONT_AUTH_ENABLE_REFRESH_TOKENS=true
 ```
 
 ## Quick Start
@@ -119,6 +323,16 @@ client = Client(
     api_key="your_api_key",
     base_url="http://localhost:8080/api/v1"
 )
+
+# Initialize with configuration object
+from symbiont import ClientConfig, AuthConfig
+
+config = ClientConfig(
+    api_key="your_api_key",
+    base_url="http://localhost:8080/api/v1",
+    auth=AuthConfig(jwt_secret_key="your-secret")
+)
+client = Client(config=config)
 ```
 
 ### System Health Check
@@ -135,7 +349,381 @@ print(f"Uptime: {health.uptime_seconds} seconds")
 print(f"Version: {health.version}")
 ```
 
+## Memory System
+
+The SDK includes a comprehensive hierarchical memory system that enables agents to store, retrieve, and manage different types of memories across multiple storage backends. The system supports conversation context, episodic memories, semantic knowledge, and automatic memory consolidation.
+
+### Memory Hierarchy
+
+The memory system organizes information into different levels:
+
+- **Short-term Memory** - Recent interactions with limited capacity and automatic expiration
+- **Long-term Memory** - Persistent important information with high retention
+- **Episodic Memory** - Event-based contextual memories tied to specific experiences
+- **Semantic Memory** - Fact-based knowledge and learned information
+
+### Memory Types
+
+- **Conversation** - Dialog and interaction memories
+- **Fact** - Factual information and knowledge
+- **Experience** - Event-based experiential memories
+- **Context** - Contextual information and metadata
+- **Metadata** - System and operational metadata
+
+### Adding Memories
+
+```python
+from symbiont import Client, MemoryStoreRequest
+from symbiont.memory import MemoryType, MemoryLevel
+
+client = Client()
+
+# Add a conversation memory
+conversation_memory = MemoryStoreRequest(
+    content={
+        "user_message": "What's the weather like?",
+        "assistant_response": "I can help you check the weather. What's your location?",
+        "timestamp": "2024-01-15T10:30:00Z"
+    },
+    memory_type=MemoryType.CONVERSATION,
+    memory_level=MemoryLevel.SHORT_TERM,
+    agent_id="agent-123",
+    conversation_id="conv-456",
+    importance_score=0.7
+)
+
+memory_response = client.add_memory(conversation_memory)
+print(f"Memory stored with ID: {memory_response.memory_id}")
+
+# Add a factual knowledge memory
+fact_memory = MemoryStoreRequest(
+    content={
+        "fact": "The user prefers metric units for temperature",
+        "context": "User settings and preferences",
+        "confidence": 0.95
+    },
+    memory_type=MemoryType.FACT,
+    memory_level=MemoryLevel.LONG_TERM,
+    agent_id="agent-123",
+    importance_score=0.9
+)
+
+fact_response = client.add_memory(fact_memory)
+print(f"Fact stored with ID: {fact_response.memory_id}")
+```
+
+### Retrieving Memories
+
+```python
+from symbiont import MemoryQuery, MemorySearchRequest
+
+# Retrieve a specific memory
+memory_query = MemoryQuery(
+    memory_id="memory-789",
+    agent_id="agent-123"
+)
+
+memory = client.get_memory(memory_query)
+print(f"Retrieved memory: {memory.content}")
+
+# Search memories by criteria
+search_request = MemorySearchRequest(
+    agent_id="agent-123",
+    memory_types=[MemoryType.CONVERSATION],
+    memory_levels=[MemoryLevel.SHORT_TERM],
+    query_text="weather",
+    limit=10
+)
+
+search_results = client.search_memory(search_request)
+print(f"Found {len(search_results.memories)} matching memories")
+
+for memory in search_results.memories:
+    print(f"- {memory.content}")
+    print(f"  Importance: {memory.importance_score}")
+```
+
+### Conversation Context
+
+```python
+# Get conversation context with related memories
+conversation_context = client.get_conversation_context(
+    conversation_id="conv-456",
+    agent_id="agent-123"
+)
+
+print(f"Conversation: {conversation_context.conversation_id}")
+print(f"Related memories: {len(conversation_context.memories)}")
+print(f"Context summary: {conversation_context.summary}")
+
+# List all memories for an agent
+agent_memories = client.list_agent_memories(
+    agent_id="agent-123",
+    limit=50
+)
+
+print(f"Agent has {len(agent_memories.memories)} total memories")
+```
+
+### Memory Consolidation
+
+The memory system automatically consolidates memories to maintain performance and relevance:
+
+```python
+# Manually trigger memory consolidation
+consolidation_result = client.consolidate_memory("agent-123")
+
+print(f"Consolidation results:")
+print(f"- Promoted to long-term: {consolidation_result.promoted_count}")
+print(f"- Archived: {consolidation_result.archived_count}")
+print(f"- Deleted: {consolidation_result.deleted_count}")
+```
+
+### Storage Backends
+
+The memory system supports multiple storage backends:
+
+- **In-Memory** - Fast access for development and testing
+- **Redis** - Distributed caching with persistence
+- **PostgreSQL** - Relational database storage (via configuration)
+
+Configure the storage backend in your configuration:
+
+```yaml
+# In config.yml
+database:
+  host: "localhost"
+  port: 5432
+  database: "symbiont_memory"
+  username: "user"
+  password: "password"
+
+# For Redis backend
+memory:
+  storage_type: "redis"
+  redis_url: "redis://localhost:6379/1"
+```
+
+## Vector Database (Qdrant Integration)
+
+The SDK provides comprehensive vector database integration using Qdrant for semantic search, similarity matching, and knowledge management operations.
+
+### Vector Collections
+
+```python
+from symbiont import Client, CollectionCreateRequest
+
+client = Client()
+
+# Create a vector collection
+collection_request = CollectionCreateRequest(
+    collection_name="documents",
+    vector_size=1536,
+    distance_metric="cosine",
+    description="Document embeddings collection"
+)
+
+collection_response = client.create_vector_collection(collection_request)
+print(f"Created collection: {collection_response.collection_name}")
+
+# List all collections
+collections = client.list_vector_collections()
+print(f"Available collections: {collections}")
+
+# Get collection information
+collection_info = client.get_collection_info("documents")
+print(f"Collection size: {collection_info.vectors_count}")
+print(f"Vector dimension: {collection_info.vector_size}")
+```
+
+### Vector Operations
+
+```python
+from symbiont import VectorUpsertRequest, VectorSearchRequest
+
+# Add vectors to collection
+vectors_data = [
+    {
+        "id": "doc-001",
+        "vector": [0.1, 0.2, 0.3, ...],  # 1536-dimensional vector
+        "payload": {
+            "title": "Getting Started Guide",
+            "content": "This guide helps you get started...",
+            "category": "documentation"
+        }
+    },
+    {
+        "id": "doc-002",
+        "vector": [0.4, 0.5, 0.6, ...],
+        "payload": {
+            "title": "API Reference",
+            "content": "Complete API documentation...",
+            "category": "reference"
+        }
+    }
+]
+
+upsert_request = VectorUpsertRequest(
+    collection_name="documents",
+    vectors=vectors_data
+)
+
+upsert_response = client.add_vectors(upsert_request)
+print(f"Added {upsert_response.vectors_count} vectors")
+
+# Search for similar vectors
+search_request = VectorSearchRequest(
+    collection_name="documents",
+    query_vector=[0.15, 0.25, 0.35, ...],  # Query vector
+    limit=5,
+    score_threshold=0.7,
+    filter_conditions={
+        "category": "documentation"
+    }
+)
+
+search_response = client.search_vectors(search_request)
+print(f"Found {len(search_response.results)} similar vectors")
+
+for result in search_response.results:
+    print(f"- ID: {result.id}")
+    print(f"  Score: {result.similarity_score}")
+    print(f"  Title: {result.payload['title']}")
+```
+
+### Semantic Search
+
+```python
+# Perform semantic search with text queries
+semantic_search = VectorSearchRequest(
+    collection_name="documents",
+    query_text="How to authenticate users",  # Text will be converted to vector
+    limit=3,
+    score_threshold=0.8
+)
+
+results = client.search_vectors(semantic_search)
+for result in results.results:
+    print(f"Match: {result.payload['title']}")
+    print(f"Relevance: {result.similarity_score:.2f}")
+    print(f"Content: {result.payload['content'][:100]}...")
+```
+
+### Vector Management
+
+```python
+# Get specific vectors
+vector_ids = ["doc-001", "doc-002"]
+retrieved_vectors = client.get_vectors("documents", vector_ids)
+
+for vector in retrieved_vectors:
+    print(f"Vector ID: {vector['id']}")
+    print(f"Payload: {vector['payload']}")
+
+# Delete vectors
+client.delete_vectors("documents", ["doc-003", "doc-004"])
+
+# Count vectors in collection
+vector_count = client.count_vectors("documents")
+print(f"Total vectors: {vector_count}")
+
+# Delete entire collection
+client.delete_vector_collection("old_collection")
+```
+
 ## API Reference
+### Enhanced Client Methods
+
+The SDK has been significantly expanded with new client methods organized by functionality:
+
+#### Configuration Management
+
+```python
+# Get current client configuration
+config = client.get_configuration()
+print(f"Base URL: {config.base_url}")
+
+# Reload configuration from sources
+client.reload_configuration()
+
+# Configure client with new settings
+new_config = ClientConfig(base_url="https://new-api.example.com")
+client.configure_client(new_config)
+```
+
+#### Authentication & Authorization
+
+```python
+# JWT authentication
+auth_response = client.authenticate_jwt("your-jwt-token")
+print(f"User: {auth_response['user_id']}")
+
+# Token refresh
+refresh_response = client.refresh_token()
+print(f"New token: {refresh_response['access_token']}")
+
+# Permission validation
+can_write = client.validate_permissions("write", "documents")
+user_roles = client.get_user_roles()
+```
+
+#### Memory Management
+
+```python
+# Store memories
+memory_response = client.add_memory(memory_request)
+
+# Retrieve and search memories
+memory = client.get_memory(memory_query)
+search_results = client.search_memory(search_request)
+
+# Conversation context
+context = client.get_conversation_context("conv-123", "agent-123")
+
+# Memory consolidation
+consolidation = client.consolidate_memory("agent-123")
+
+# Agent memory listing
+agent_memories = client.list_agent_memories("agent-123")
+```
+
+#### Vector Database Operations
+
+```python
+# Collection management
+collection = client.create_vector_collection(collection_request)
+collections = client.list_vector_collections()
+collection_info = client.get_collection_info("my_collection")
+client.delete_vector_collection("old_collection")
+
+# Vector operations
+upsert_response = client.add_vectors(upsert_request)
+vectors = client.get_vectors("collection", ["id1", "id2"])
+search_results = client.search_vectors(search_request)
+client.delete_vectors("collection", ["id3", "id4"])
+vector_count = client.count_vectors("collection")
+```
+
+#### HTTP Endpoint Management
+
+```python
+# Create and manage HTTP endpoints
+endpoint = client.create_http_endpoint(endpoint_request)
+endpoints = client.list_http_endpoints()
+endpoint_info = client.get_http_endpoint("endpoint-123")
+updated_endpoint = client.update_http_endpoint(update_request)
+
+# Endpoint control
+client.enable_http_endpoint("endpoint-123")
+client.disable_http_endpoint("endpoint-123") 
+client.delete_http_endpoint("endpoint-123")
+
+# Endpoint metrics
+metrics = client.get_endpoint_metrics("endpoint-123")
+print(f"Request count: {metrics.request_count}")
+print(f"Average response time: {metrics.avg_response_time}ms")
+```
+
 
 ### Agent Management
 

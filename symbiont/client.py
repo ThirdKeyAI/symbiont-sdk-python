@@ -472,7 +472,7 @@ class Client:
         if isinstance(workflow_request, dict):
             workflow_request = WorkflowExecutionRequest(**workflow_request)
 
-        response = self._request("POST", "workflows", json=workflow_request.dict())
+        response = self._request("POST", "workflows", json=workflow_request.model_dump())
         return response.json()
 
     # =============================================================================
@@ -491,7 +491,7 @@ class Client:
         if isinstance(review_request, dict):
             review_request = ReviewSessionCreate(**review_request)
 
-        response = self._request("POST", "tool-review/sessions", json=review_request.dict())
+        response = self._request("POST", "tool-review/sessions", json=review_request.model_dump())
         return ReviewSessionResponse(**response.json())
 
     def get_review_session(self, review_id: str) -> ReviewSession:
@@ -556,7 +556,7 @@ class Client:
         if isinstance(decision, dict):
             decision = HumanReviewDecision(**decision)
 
-        response = self._request("POST", f"tool-review/sessions/{review_id}/decisions", json=decision.dict())
+        response = self._request("POST", f"tool-review/sessions/{review_id}/decisions", json=decision.model_dump())
         return response.json()
 
     def sign_approved_tool(self, signing_request: Union[SigningRequest, Dict[str, Any]]) -> SigningResponse:
@@ -571,7 +571,7 @@ class Client:
         if isinstance(signing_request, dict):
             signing_request = SigningRequest(**signing_request)
 
-        response = self._request("POST", "tool-review/sign", json=signing_request.dict())
+        response = self._request("POST", "tool-review/sign", json=signing_request.model_dump())
         return SigningResponse(**response.json())
 
     def get_signed_tool(self, review_id: str) -> SignedTool:
@@ -602,7 +602,7 @@ class Client:
         if isinstance(agent_data, dict):
             agent_data = Agent(**agent_data)
 
-        response = self._request("POST", "agents", json=agent_data.dict())
+        response = self._request("POST", "agents", json=agent_data.model_dump())
         return response.json()
 
     def wait_for_review_completion(self, review_id: str, timeout: int = 300) -> ReviewSession:
@@ -645,7 +645,7 @@ class Client:
         if isinstance(config, dict):
             config = SecretBackendConfig(**config)
 
-        response = self._request("POST", "secrets/config", json=config.dict())
+        response = self._request("POST", "secrets/config", json=config.model_dump())
         return response.json()
 
     def store_secret(self, secret_request: Union[SecretRequest, Dict[str, Any]]) -> SecretResponse:
@@ -660,7 +660,7 @@ class Client:
         if isinstance(secret_request, dict):
             secret_request = SecretRequest(**secret_request)
 
-        response = self._request("POST", "secrets", json=secret_request.dict())
+        response = self._request("POST", "secrets", json=secret_request.model_dump())
         return SecretResponse(**response.json())
 
     def get_secret(self, agent_id: str, secret_name: str) -> str:
@@ -717,7 +717,7 @@ class Client:
         if isinstance(config, dict):
             config = McpServerConfig(**config)
 
-        response = self._request("POST", "mcp/servers", json=config.dict())
+        response = self._request("POST", "mcp/servers", json=config.model_dump())
         return response.json()
 
     def list_mcp_servers(self) -> List[McpConnectionInfo]:
@@ -815,7 +815,7 @@ class Client:
         if isinstance(item, dict):
             item = KnowledgeItem(**item)
 
-        response = self._request("POST", "knowledge", json=item.dict())
+        response = self._request("POST", "knowledge", json=item.model_dump())
         return response.json()
 
     def search_knowledge(self, search_request: Union[VectorSearchRequest, Dict[str, Any]]) -> VectorSearchResponse:
@@ -830,7 +830,7 @@ class Client:
         if isinstance(search_request, dict):
             search_request = VectorSearchRequest(**search_request)
 
-        response = self._request("POST", "knowledge/search", json=search_request.dict())
+        response = self._request("POST", "knowledge/search", json=search_request.model_dump())
         return VectorSearchResponse(**response.json())
 
     def get_context(self, context_query: Union[ContextQuery, Dict[str, Any]]) -> ContextResponse:
@@ -845,7 +845,7 @@ class Client:
         if isinstance(context_query, dict):
             context_query = ContextQuery(**context_query)
 
-        response = self._request("POST", "rag/context", json=context_query.dict())
+        response = self._request("POST", "rag/context", json=context_query.model_dump())
         return ContextResponse(**response.json())
 
     def delete_knowledge_item(self, item_id: str) -> Dict[str, Any]:
@@ -876,7 +876,7 @@ class Client:
         if isinstance(compile_request, dict):
             compile_request = DslCompileRequest(**compile_request)
 
-        response = self._request("POST", "dsl/compile", json=compile_request.dict())
+        response = self._request("POST", "dsl/compile", json=compile_request.model_dump())
         return DslCompileResponse(**response.json())
 
     def deploy_agent(self, deploy_request: Union[AgentDeployRequest, Dict[str, Any]]) -> AgentDeployResponse:
@@ -891,7 +891,7 @@ class Client:
         if isinstance(deploy_request, dict):
             deploy_request = AgentDeployRequest(**deploy_request)
 
-        response = self._request("POST", "agents/deploy", json=deploy_request.dict())
+        response = self._request("POST", "agents/deploy", json=deploy_request.model_dump())
         return AgentDeployResponse(**response.json())
 
     def get_agent_deployment(self, deployment_id: str) -> AgentDeployResponse:
@@ -951,7 +951,7 @@ class Client:
         if isinstance(request, dict):
             request = HttpInputCreateRequest(**request)
 
-        response = self._request("POST", "http-input/servers", json=request.dict())
+        response = self._request("POST", "http-input/servers", json=request.model_dump())
         return HttpInputServerInfo(**response.json())
 
     def list_http_input_servers(self) -> List[HttpInputServerInfo]:
@@ -987,7 +987,7 @@ class Client:
         if isinstance(request, dict):
             request = HttpInputUpdateRequest(**request)
 
-        response = self._request("PUT", f"http-input/servers/{request.server_id}", json=request.dict())
+        response = self._request("PUT", f"http-input/servers/{request.server_id}", json=request.model_dump())
         return HttpInputServerInfo(**response.json())
 
     def start_http_input_server(self, server_id: str) -> Dict[str, Any]:
@@ -1038,7 +1038,7 @@ class Client:
         if isinstance(request, dict):
             request = WebhookTriggerRequest(**request)
 
-        response = self._request("POST", f"http-input/servers/{request.server_id}/trigger", json=request.dict())
+        response = self._request("POST", f"http-input/servers/{request.server_id}/trigger", json=request.model_dump())
         return WebhookTriggerResponse(**response.json())
 
     def get_http_input_metrics(self, server_id: str) -> Dict[str, Any]:
