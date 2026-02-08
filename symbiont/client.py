@@ -84,6 +84,7 @@ from .models import (
     WebhookTriggerResponse,
     WorkflowExecutionRequest,
 )
+from .channels import ChannelClient
 from .schedules import ScheduleClient
 
 
@@ -150,6 +151,7 @@ class Client:
 
         # Lazy-loaded sub-clients
         self._schedules: Optional[ScheduleClient] = None
+        self._channels: Optional[ChannelClient] = None
 
     @property
     def schedules(self) -> ScheduleClient:
@@ -157,6 +159,13 @@ class Client:
         if self._schedules is None:
             self._schedules = ScheduleClient(self)
         return self._schedules
+
+    @property
+    def channels(self) -> ChannelClient:
+        """Lazy-loaded channel adapter management client."""
+        if self._channels is None:
+            self._channels = ChannelClient(self)
+        return self._channels
 
     def _request(self, method: str, endpoint: str, **kwargs):
         """Make an HTTP request to the API.
