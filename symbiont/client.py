@@ -84,6 +84,7 @@ from .models import (
     WebhookTriggerResponse,
     WorkflowExecutionRequest,
 )
+from .schedules import ScheduleClient
 
 
 class Client:
@@ -146,6 +147,16 @@ class Client:
         # Backward compatibility properties
         self.api_key = self.config.api_key
         self.base_url = self.config.base_url
+
+        # Lazy-loaded sub-clients
+        self._schedules: Optional[ScheduleClient] = None
+
+    @property
+    def schedules(self) -> ScheduleClient:
+        """Lazy-loaded schedule management client."""
+        if self._schedules is None:
+            self._schedules = ScheduleClient(self)
+        return self._schedules
 
     def _request(self, method: str, endpoint: str, **kwargs):
         """Make an HTTP request to the API.

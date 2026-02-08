@@ -7,8 +7,6 @@ via the Symbiont Runtime API.
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from .exceptions import APIError, NotFoundError
-
 
 @dataclass
 class CreateScheduleRequest:
@@ -119,6 +117,25 @@ class DeleteScheduleResponse:
     deleted: bool
 
 
+@dataclass
+class SchedulerHealthResponse:
+    """Scheduler health response from GET /health/scheduler."""
+
+    is_running: bool
+    store_accessible: bool
+    jobs_total: int
+    jobs_active: int
+    jobs_paused: int
+    jobs_dead_letter: int
+    global_active_runs: int
+    max_concurrent: int
+    runs_total: int
+    runs_succeeded: int
+    runs_failed: int
+    average_execution_time_ms: float
+    longest_run_ms: float
+
+
 class ScheduleClient:
     """Client for managing cron schedules via the Symbiont Runtime API.
 
@@ -140,7 +157,8 @@ class ScheduleClient:
         params: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Make an authenticated request through the parent client."""
-        return self._client._request(method, path, json=json, params=params)
+        response = self._client._request(method, path, json=json, params=params)
+        return response.json()
 
     def list_schedules(self) -> List[ScheduleSummary]:
         """List all scheduled jobs. ``GET /schedules``"""
@@ -219,3 +237,8 @@ class ScheduleClient:
             "GET", f"/schedules/{job_id}/next-runs", params={"count": count}
         )
         return NextRunsResponse(**data)
+
+    def get_scheduler_health(self) -> SchedulerHealthResponse:
+        """Get scheduler health status. ``GET /health/scheduler``"""
+        data = self._request("GET", "/health/scheduler")
+        return SchedulerHealthResponse(**data)

@@ -82,11 +82,25 @@ from .models import (
     WorkflowExecutionRequest,
     WorkflowExecutionResponse,
 )
+from .schedules import (
+    CreateScheduleRequest,
+    CreateScheduleResponse,
+    DeleteScheduleResponse,
+    NextRunsResponse,
+    ScheduleActionResponse,
+    ScheduleClient,
+    ScheduleDetail,
+    ScheduleHistoryResponse,
+    SchedulerHealthResponse,
+    ScheduleRunEntry,
+    ScheduleSummary,
+    UpdateScheduleRequest,
+)
 
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 
 __all__ = [
     # Client
@@ -127,6 +141,15 @@ __all__ = [
     'RouteMatchType', 'AgentRoutingRule', 'HttpResponseControlConfig',
     'HttpInputConfig', 'HttpInputServerInfo', 'HttpInputCreateRequest', 'HttpInputUpdateRequest',
     'WebhookTriggerRequest', 'WebhookTriggerResponse',
+
+    # Schedule Models
+    'ScheduleClient',
+    'CreateScheduleRequest', 'CreateScheduleResponse',
+    'UpdateScheduleRequest',
+    'ScheduleSummary', 'ScheduleDetail', 'ScheduleRunEntry',
+    'ScheduleHistoryResponse', 'NextRunsResponse',
+    'ScheduleActionResponse', 'DeleteScheduleResponse',
+    'SchedulerHealthResponse',
 
     # Exceptions
     'SymbiontError',
