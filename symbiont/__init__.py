@@ -2,6 +2,7 @@
 
 from dotenv import load_dotenv
 
+from .agentpin import AgentPinClient
 from .client import Client
 from .exceptions import (
     APIError,
@@ -100,7 +101,7 @@ from .schedules import (
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 __all__ = [
     # Client
@@ -141,6 +142,9 @@ __all__ = [
     'RouteMatchType', 'AgentRoutingRule', 'HttpResponseControlConfig',
     'HttpInputConfig', 'HttpInputServerInfo', 'HttpInputCreateRequest', 'HttpInputUpdateRequest',
     'WebhookTriggerRequest', 'WebhookTriggerResponse',
+
+    # AgentPin
+    'AgentPinClient',
 
     # Schedule Models
     'ScheduleClient',

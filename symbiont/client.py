@@ -152,6 +152,7 @@ class Client:
         # Lazy-loaded sub-clients
         self._schedules: Optional[ScheduleClient] = None
         self._channels: Optional[ChannelClient] = None
+        self._agentpin: Optional[Any] = None
 
     @property
     def schedules(self) -> ScheduleClient:
@@ -166,6 +167,14 @@ class Client:
         if self._channels is None:
             self._channels = ChannelClient(self)
         return self._channels
+
+    @property
+    def agentpin(self):
+        """Lazy-loaded AgentPin client for credential verification and discovery."""
+        if self._agentpin is None:
+            from .agentpin import AgentPinClient
+            self._agentpin = AgentPinClient(self)
+        return self._agentpin
 
     def _request(self, method: str, endpoint: str, **kwargs):
         """Make an HTTP request to the API.

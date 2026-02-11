@@ -15,7 +15,7 @@ def read_requirements():
 
 setup(
     name='symbiont-sdk',
-    version='0.2.0',
+    version='0.5.0',
     author='Jascha Wanger / ThirdKey.ai',
     author_email='oss@symbiont.dev',
     description='Python SDK for Symbiont platform with Tool Review and Runtime APIs',

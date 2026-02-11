@@ -38,6 +38,7 @@ dependencies = [
     "pydantic-settings>=2.0.0",
     "redis>=5.0.0",
     "qdrant-client>=1.7.0",
+    "agentpin>=0.2.0",
 ]
 
 [project.optional-dependencies]

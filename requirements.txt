@@ -7,3 +7,4 @@ redis>=5.0.0
 pyyaml>=6.0.0
 pydantic-settings>=2.0.0
 qdrant-client>=1.7.0
+agentpin>=0.2.0
