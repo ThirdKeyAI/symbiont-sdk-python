@@ -33,7 +33,7 @@ The SDK is also available as a Docker image from GitHub Container Registry:
 docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:latest
 
 # Or pull a specific version
-docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:v0.2.0
+docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:v0.5.0
 ```
 
 #### Running with Docker
@@ -631,6 +631,67 @@ print(f"Total vectors: {vector_count}")
 client.delete_vector_collection("old_collection")
 ```
 
+## AgentPin: Credential Verification
+
+The SDK integrates with [AgentPin](https://github.com/ThirdKeyAI/agentpin) for domain-anchored cryptographic identity verification of AI agents. AgentPin operations run client-side — no Symbiont Runtime required.
+
+### Key Generation & Credential Issuance
+
+```python
+from symbiont import Client
+
+client = Client()
+
+# Generate P-256 key pair
+private_key, public_key = client.agentpin.generate_key_pair()
+kid = client.agentpin.generate_key_id(public_key)
+
+# Issue an ES256 JWT credential
+jwt = client.agentpin.issue_credential(
+    private_key_pem=private_key,
+    kid=kid,
+    issuer="example.com",
+    agent_id="data-analyzer",
+    capabilities=["read:data", "write:reports"],
+    ttl_secs=3600,
+)
+```
+
+### Credential Verification
+
+```python
+# Online verification (fetches discovery document automatically)
+result = client.agentpin.verify_credential(jwt)
+print(f"Valid: {result.valid}, Agent: {result.agent_id}")
+
+# Offline verification with pre-fetched documents
+discovery = client.agentpin.fetch_discovery_document("example.com")
+offline_result = client.agentpin.verify_credential_offline(jwt, discovery)
+
+# Trust bundle verification (fully offline, no network)
+bundle = client.agentpin.create_trust_bundle()
+bundle_result = client.agentpin.verify_credential_with_bundle(jwt, bundle)
+```
+
+### Discovery & Key Pinning
+
+```python
+# Fetch and validate discovery documents
+doc = client.agentpin.fetch_discovery_document("example.com")
+client.agentpin.validate_discovery_document(doc, "example.com")
+
+# TOFU key pinning
+pin_store = client.agentpin.create_pin_store()
+
+# Trust bundle persistence
+client.agentpin.save_trust_bundle(bundle, "trust-bundle.json")
+loaded = client.agentpin.load_trust_bundle("trust-bundle.json")
+
+# JWK utilities
+jwk = client.agentpin.pem_to_jwk(public_key, kid)
+pem = client.agentpin.jwk_to_pem(jwk)
+```
+
 ## API Reference
 ### Enhanced Client Methods
 
@@ -1062,6 +1123,21 @@ pytest
 - requests
 - pydantic
 - python-dotenv
+
+## What's New in v0.5.0
+
+### AgentPin Integration
+
+- **AgentPinClient** — Client-side credential verification, discovery, and trust bundle support via the `agentpin` PyPI package
+- `client.agentpin.verify_credential()` — Full 12-step online verification
+- `client.agentpin.verify_credential_offline()` — Offline verification with pre-fetched documents
+- `client.agentpin.verify_credential_with_bundle()` — Trust bundle-based verification (no network)
+- `client.agentpin.fetch_discovery_document()` — Fetch `.well-known/agent-identity.json`
+- `client.agentpin.issue_credential()` — Issue ES256 JWT credentials
+- `client.agentpin.generate_key_pair()` — P-256 key generation
+- Key pinning (TOFU), trust bundle persistence, and JWK utilities
+
+See the [AgentPin section](#agentpin-credential-verification) above for usage examples.
 
 ## What's New in v0.3.0
 
