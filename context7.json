@@ -1,4 +1,32 @@
 {
+  "$schema": "https://context7.com/schema/context7.json",
   "url": "https://context7.com/thirdkeyai/symbiont-sdk-python",
-  "public_key": "pk_Ehy7QXQTu2Keb0e5BNeyx"
+  "public_key": "pk_Ehy7QXQTu2Keb0e5BNeyx",
+  "projectTitle": "Symbiont SDK for Python",
+  "description": "Python SDK for the Symbiont agent runtime — agent lifecycle, webhook verification, AgentPin identity, memory systems, skill scanning, metrics, scheduling, channel adapters, and vector search. Part of the ThirdKey trust stack.",
+  "folders": [
+    "SKILL.md",
+    "README.md",
+    "CHANGELOG.md",
+    "symbiont"
+  ],
+  "excludeFolders": [
+    "**/__pycache__",
+    "**/.pytest_cache",
+    "**/dist",
+    "**/*.egg-info",
+    ".ruff_cache"
+  ],
+  "excludeFiles": [],
+  "rules": [
+    "Import from symbiont for the client and all public modules — 'from symbiont import Client, WebhookProvider, SkillScanner, MarkdownMemoryStore, MetricsClient'",
+    "Use Client as the main entry point — sub-clients (agentpin, schedules, channels, metrics_client) are lazy-loaded properties on first access",
+    "Webhook verification: use WebhookProvider.GITHUB.verifier(secret) for known providers; HmacVerifier and JwtVerifier for custom setups",
+    "AgentPin credentials use ES256 (ECDSA P-256) exclusively — never accept other algorithms",
+    "MarkdownMemoryStore, SkillScanner, SkillLoader, FileMetricsExporter, CompositeExporter, MetricsCollector are standalone modules — import directly, not via client sub-clients",
+    "Pydantic models for API serialization live in symbiont.models; dataclasses for feature DTOs live in their respective modules (webhooks, skills, metrics, markdown_memory)",
+    "SkillScanner includes 10 built-in ClawHavoc security rules — always scan untrusted skills before loading",
+    "Optional dependencies: pip install symbiont-sdk[skills] for SchemaPin signature verification, symbiont-sdk[metrics] for OpenTelemetry export",
+    "All API methods are synchronous — no async/await needed"
+  ]
 }
