@@ -6,18 +6,23 @@
   "description": "Python SDK for the Symbiont agent runtime — agent lifecycle, webhook verification, AgentPin identity, memory systems, skill scanning, metrics, scheduling, channel adapters, and vector search. Part of the ThirdKey trust stack.",
   "folders": [
     "SKILL.md",
-    "README.md",
-    "CHANGELOG.md",
-    "symbiont"
+    "README.md"
   ],
   "excludeFolders": [
     "**/__pycache__",
     "**/.pytest_cache",
     "**/dist",
     "**/*.egg-info",
-    ".ruff_cache"
+    ".ruff_cache",
+    "symbiont",
+    "tests"
   ],
-  "excludeFiles": [],
+  "excludeFiles": [
+    "**/*.py",
+    "**/*.toml",
+    "**/*.cfg",
+    "CHANGELOG.md"
+  ],
   "rules": [
     "Import from symbiont for the client and all public modules — 'from symbiont import Client, WebhookProvider, SkillScanner, MarkdownMemoryStore, MetricsClient'",
     "Use Client as the main entry point — sub-clients (agentpin, schedules, channels, metrics_client) are lazy-loaded properties on first access",
