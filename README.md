@@ -33,7 +33,7 @@ The SDK is also available as a Docker image from GitHub Container Registry:
 docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:latest
 
 # Or pull a specific version
-docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:v0.5.0
+docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:v0.6.0
 ```
 
 #### Running with Docker
@@ -1124,231 +1124,141 @@ pytest
 - pydantic
 - python-dotenv
 
-## What's New in v0.5.0
+## What's New in v0.6.0
 
-### AgentPin Integration
+### Webhook Verification
 
-- **AgentPinClient** — Client-side credential verification, discovery, and trust bundle support via the `agentpin` PyPI package
+Verify inbound webhook signatures from GitHub, Stripe, Slack, or custom providers:
+
+```python
+from symbiont import WebhookProvider, HmacVerifier, JwtVerifier
+
+# Use a provider preset
+verifier = WebhookProvider.GITHUB.verifier(secret=b"your-secret")
+verifier.verify(request.headers, request.body)
+
+# Manual HMAC with prefix stripping
+hmac = HmacVerifier(secret=b"your-secret", header_name="X-Hub-Signature-256", prefix="sha256=")
+hmac.verify(headers, body)
+
+# JWT-based verification
+jwt_v = JwtVerifier(secret=b"your-secret", header_name="Authorization", required_issuer="expected-issuer")
+jwt_v.verify(headers, body)
+```
+
+Provider presets: `GITHUB`, `STRIPE`, `SLACK`, `CUSTOM`.
+
+### Markdown Memory Persistence
+
+File-based agent context that survives restarts:
+
+```python
+from symbiont import MarkdownMemoryStore, AgentMemoryContext
+
+store = MarkdownMemoryStore("/data/memory", retention_days=30)
+
+store.save_context("agent-1", AgentMemoryContext(
+    agent_id="agent-1",
+    facts=["User prefers dark mode", "Timezone is UTC-5"],
+    procedures=["Always greet by name"],
+    learned_patterns=["Responds better to bullet points"],
+    metadata={"last_session": "2026-02-15"},
+))
+
+context = store.load_context("agent-1")
+agents = store.list_agent_contexts()
+store.compact("agent-1")
+stats = store.get_storage_stats()
+```
+
+### Agent Skills (ClawHavoc Scanning)
+
+Scan and load agent skill definitions with security scanning:
+
+```python
+from symbiont import SkillScanner, SkillLoader, SkillLoaderConfig
+
+# Scan for security issues (10 built-in ClawHavoc rules)
+scanner = SkillScanner()
+findings = scanner.scan_content(content, "SKILL.md")
+
+# Scan an entire skill directory
+result = scanner.scan_skill("/path/to/skill")
+
+# Load skills from paths
+loader = SkillLoader(SkillLoaderConfig(
+    load_paths=["/skills/verified", "/skills/community"],
+    require_signed=False,
+    scan_enabled=True,
+))
+
+skills = loader.load_all()
+skill = loader.load_skill("/path/to/skill")
+```
+
+Detects: pipe-to-shell, wget-pipe-to-shell, env file references, SOUL.md/memory.md tampering, eval+fetch, base64-decode-exec, rm-rf, chmod-777.
+
+### Metrics Collection & Export
+
+Runtime metrics retrieval and local export:
+
+```python
+from symbiont import FileMetricsExporter, CompositeExporter, MetricsCollector
+
+# Fetch from runtime API
+snapshot = client.metrics_client.get_metrics_snapshot()
+scheduler = client.metrics_client.get_scheduler_metrics()
+system = client.metrics_client.get_system_metrics()
+
+# Export to file (atomic JSON write)
+exporter = FileMetricsExporter(file_path="/tmp/metrics.json")
+exporter.export(snapshot)
+
+# Fan-out to multiple backends
+composite = CompositeExporter([exporter, other_exporter])
+
+# Background collection
+collector = MetricsCollector(composite, interval_seconds=60)
+collector.start(fetch_fn)
+collector.stop()
+```
+
+### Optional Dependencies
+
+```bash
+pip install symbiont-sdk[skills]   # SchemaPin signature verification
+pip install symbiont-sdk[metrics]  # OpenTelemetry export
+```
+
+### Other v0.6.0 Additions
+
+- **HmacVerifier** / **JwtVerifier** — Constant-time signature comparison with case-insensitive header lookup
+- **WebhookProvider** enum — Factory method for provider-specific verifiers
+- **SkillScanner** — 10 built-in ClawHavoc security rules with custom rule support
+- **SkillLoader** — YAML frontmatter parsing, SchemaPin signature detection
+- **FileMetricsExporter** — Atomic JSON writes with parent directory creation
+- **CompositeExporter** — Fan-out with partial failure tolerance
+- **MetricsCollector** — Background threading for periodic export
+- **MetricsClient** — Sub-client for runtime metrics API
+
+## Previous Releases
+
+### v0.5.0 — AgentPin Integration
+
 - `client.agentpin.verify_credential()` — Full 12-step online verification
 - `client.agentpin.verify_credential_offline()` — Offline verification with pre-fetched documents
-- `client.agentpin.verify_credential_with_bundle()` — Trust bundle-based verification (no network)
-- `client.agentpin.fetch_discovery_document()` — Fetch `.well-known/agent-identity.json`
+- `client.agentpin.verify_credential_with_bundle()` — Trust bundle-based verification
 - `client.agentpin.issue_credential()` — Issue ES256 JWT credentials
 - `client.agentpin.generate_key_pair()` — P-256 key generation
 - Key pinning (TOFU), trust bundle persistence, and JWK utilities
 
-See the [AgentPin section](#agentpin-credential-verification) above for usage examples.
+### v0.3.0 — Secrets, MCP, Vector DB, DSL
 
-## What's New in v0.3.0
-
-### Major New Features
-
-- **Secrets Management System**: Complete secrets management with HashiCorp Vault, encrypted files, and OS keychain integration
-- **MCP Management**: Enhanced Model Context Protocol server management and tool integration
-- **Vector Database & RAG**: Knowledge management with vector similarity search and retrieval-augmented generation
-- **Agent DSL Operations**: DSL compilation and agent deployment capabilities
-- **Enhanced Monitoring**: Comprehensive system and agent metrics
-- **Security Enhancements**: Advanced signing and verification workflows
-
-### Secrets Management
-
-```python
-from symbiont import (
-    Client, SecretBackendConfig, SecretBackendType,
-    VaultConfig, VaultAuthMethod, SecretRequest
-)
-
-client = Client()
-
-# Configure HashiCorp Vault backend
-vault_config = VaultConfig(
-    url="https://vault.example.com",
-    auth_method=VaultAuthMethod.TOKEN,
-    token="hvs.abc123..."
-)
-
-backend_config = SecretBackendConfig(
-    backend_type=SecretBackendType.VAULT,
-    vault_config=vault_config
-)
-
-client.configure_secret_backend(backend_config)
-
-# Store and retrieve secrets
-secret_request = SecretRequest(
-    agent_id="agent-123",
-    secret_name="api_key",
-    secret_value="secret_value_here",
-    description="API key for external service"
-)
-
-response = client.store_secret(secret_request)
-print(f"Secret stored: {response.secret_name}")
-
-# Retrieve secret
-secret_value = client.get_secret("agent-123", "api_key")
-print(f"Retrieved secret: {secret_value}")
-
-# List all secrets for an agent
-secrets_list = client.list_secrets("agent-123")
-print(f"Agent secrets: {secrets_list.secrets}")
-```
-
-### MCP Management
-
-```python
-from symbiont import McpServerConfig
-
-# Add MCP server
-mcp_config = McpServerConfig(
-    name="filesystem-server",
-    command=["npx", "@modelcontextprotocol/server-filesystem", "/tmp"],
-    env={"NODE_ENV": "production"},
-    timeout_seconds=30
-)
-
-client.add_mcp_server(mcp_config)
-
-# Connect to server
-client.connect_mcp_server("filesystem-server")
-
-# List available tools and resources
-tools = client.list_mcp_tools("filesystem-server")
-resources = client.list_mcp_resources("filesystem-server")
-
-print(f"Available tools: {[tool.name for tool in tools]}")
-print(f"Available resources: {[resource.uri for resource in resources]}")
-
-# Get connection status
-connection_info = client.get_mcp_server("filesystem-server")
-print(f"Status: {connection_info.status}")
-print(f"Tools count: {connection_info.tools_count}")
-```
-
-### Vector Database & RAG
-
-```python
-from symbiont import (
-    KnowledgeItem, VectorMetadata, KnowledgeSourceType,
-    VectorSearchRequest, ContextQuery
-)
-
-# Add knowledge items
-metadata = VectorMetadata(
-    source="documentation.md",
-    source_type=KnowledgeSourceType.DOCUMENT,
-    timestamp=datetime.now(),
-    agent_id="agent-123"
-)
-
-knowledge_item = KnowledgeItem(
-    id="doc-001",
-    content="This is important documentation about the system...",
-    metadata=metadata
-)
-
-client.add_knowledge_item(knowledge_item)
-
-# Search knowledge base
-search_request = VectorSearchRequest(
-    query="How do I configure the system?",
-    agent_id="agent-123",
-    source_types=[KnowledgeSourceType.DOCUMENT],
-    limit=5,
-    similarity_threshold=0.7
-)
-
-search_results = client.search_knowledge(search_request)
-for result in search_results.results:
-    print(f"Score: {result.similarity_score}")
-    print(f"Content: {result.item.content[:100]}...")
-
-# Get context for RAG operations
-context_query = ContextQuery(
-    query="How do I set up authentication?",
-    agent_id="agent-123",
-    max_context_items=3
-)
-
-context = client.get_context(context_query)
-print(f"Retrieved {len(context.context_items)} context items")
-print(f"Sources: {context.sources}")
-```
-
-### Agent DSL Operations
-
-```python
-from symbiont import DslCompileRequest, AgentDeployRequest
-
-# Compile DSL code
-dsl_code = """
-agent webhook_handler {
-    name: "Webhook Handler"
-    description: "Handles incoming webhooks"
-    
-    trigger github_webhook {
-        on_push: main
-    }
-    
-    action process_webhook {
-        validate_signature()
-        parse_payload()
-        trigger_workflow()
-    }
-}
-"""
-
-compile_request = DslCompileRequest(
-    dsl_content=dsl_code,
-    agent_name="webhook_handler",
-    validate_only=False
-)
-
-compile_result = client.compile_dsl(compile_request)
-if compile_result.success:
-    print(f"Compiled successfully: {compile_result.agent_id}")
-    
-    # Deploy the agent
-    deploy_request = AgentDeployRequest(
-        agent_id=compile_result.agent_id,
-        environment="production",
-        config_overrides={"max_concurrent_tasks": 10}
-    )
-    
-    deployment = client.deploy_agent(deploy_request)
-    print(f"Deployed: {deployment.deployment_id}")
-    print(f"Endpoint: {deployment.endpoint_url}")
-else:
-    print(f"Compilation errors: {compile_result.errors}")
-```
-
-### Enhanced Monitoring
-
-```python
-# Get comprehensive system metrics
-system_metrics = client.get_metrics()
-print(f"Memory usage: {system_metrics.memory_usage_percent}%")
-print(f"CPU usage: {system_metrics.cpu_usage_percent}%")
-print(f"Active agents: {system_metrics.active_agents}")
-print(f"Vector DB items: {system_metrics.vector_db_items}")
-print(f"MCP connections: {system_metrics.mcp_connections}")
-
-# Get agent-specific metrics
-agent_metrics = client.get_agent_metrics("agent-123")
-print(f"Tasks completed: {agent_metrics.tasks_completed}")
-print(f"Average response time: {agent_metrics.average_response_time_ms}ms")
-print(f"Agent uptime: {agent_metrics.uptime_seconds}s")
-```
-
-## Previous Release Notes
-
-### v0.2.0
-
-- **Tool Review API**: Complete implementation of tool review workflows
-- **Runtime API**: Agent management, workflow execution, and system metrics
-- **Enhanced Models**: Comprehensive type definitions for all API responses
-- **Better Error Handling**: Specific exceptions for different error conditions
-- **Improved Documentation**: Complete API reference with examples
+- Secrets management (Vault, file, environment providers)
+- MCP server management and tool integration
+- Vector database & RAG with Qdrant
+- Agent DSL compilation and deployment
+- Enhanced system and agent metrics
 
 ## License
 
