@@ -976,5 +976,160 @@ class HttpEndpointResponse(BaseModel):
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
 
 
+# =============================================================================
+# Webhook Verification Models
+# =============================================================================
 
+class WebhookProviderType(str, Enum):
+    """Webhook provider type enumeration."""
+    GITHUB = "github"
+    STRIPE = "stripe"
+    SLACK = "slack"
+    CUSTOM = "custom"
+
+
+class WebhookVerificationConfig(BaseModel):
+    """Webhook verification configuration."""
+    provider: WebhookProviderType = Field(..., description="Webhook provider type")
+    secret: str = Field(..., description="Shared secret for verification")
+    header_name: Optional[str] = Field(None, description="Custom header name override")
+    required_issuer: Optional[str] = Field(None, description="Required JWT issuer")
+
+
+# =============================================================================
+# Skills Models
+# =============================================================================
+
+class SignatureStatusType(str, Enum):
+    """Skill signature verification status."""
+    VERIFIED = "verified"
+    PINNED = "pinned"
+    UNSIGNED = "unsigned"
+    INVALID = "invalid"
+    REVOKED = "revoked"
+
+
+class ScanSeverityType(str, Enum):
+    """Skill scan finding severity levels."""
+    CRITICAL = "critical"
+    WARNING = "warning"
+    INFO = "info"
+
+
+class ScanFindingModel(BaseModel):
+    """Individual scan finding from skill scanning."""
+    rule: str = Field(..., description="Rule that triggered the finding")
+    severity: ScanSeverityType = Field(..., description="Finding severity")
+    message: str = Field(..., description="Finding description")
+    line: Optional[int] = Field(None, description="Line number where finding occurred")
+    file: Optional[str] = Field(None, description="File where finding occurred")
+
+
+class ScanResultModel(BaseModel):
+    """Result of scanning a skill."""
+    passed: bool = Field(..., description="Whether the scan passed")
+    findings: List[ScanFindingModel] = Field(default_factory=list, description="Scan findings")
+
+
+class SkillMetadataModel(BaseModel):
+    """Skill metadata from frontmatter."""
+    name: str = Field(..., description="Skill name")
+    description: Optional[str] = Field(None, description="Skill description")
+    raw_frontmatter: Dict[str, Any] = Field(default_factory=dict, description="Raw YAML frontmatter")
+
+
+class LoadedSkillModel(BaseModel):
+    """A loaded skill with metadata and scan results."""
+    name: str = Field(..., description="Skill name")
+    path: str = Field(..., description="Skill directory path")
+    signature_status: SignatureStatusType = Field(..., description="Signature verification status")
+    content: str = Field(..., description="Skill content")
+    metadata: Optional[SkillMetadataModel] = Field(None, description="Skill metadata")
+    scan_result: Optional[ScanResultModel] = Field(None, description="Scan result")
+
+
+class SkillsConfig(BaseModel):
+    """Skills configuration."""
+    load_paths: List[str] = Field(default_factory=list, description="Paths to search for skills")
+    require_signed: bool = Field(False, description="Require all skills to be signed")
+    allow_unsigned_from: List[str] = Field(default_factory=list, description="Paths that allow unsigned skills")
+    auto_pin: bool = Field(False, description="Automatically pin new skill signatures")
+    scan_enabled: bool = Field(True, description="Enable skill scanning")
+    custom_deny_patterns: List[str] = Field(default_factory=list, description="Custom deny regex patterns")
+
+
+# =============================================================================
+# Metrics Models
+# =============================================================================
+
+class OtlpProtocol(str, Enum):
+    """OTLP exporter protocol."""
+    GRPC = "grpc"
+    HTTP = "http"
+
+
+class OtlpConfig(BaseModel):
+    """OTLP exporter configuration."""
+    endpoint: str = Field(..., description="OTLP endpoint URL")
+    protocol: OtlpProtocol = Field(OtlpProtocol.GRPC, description="Transport protocol")
+    headers: Dict[str, str] = Field(default_factory=dict, description="Additional headers")
+    timeout_seconds: int = Field(10, description="Export timeout in seconds")
+
+
+class FileMetricsConfig(BaseModel):
+    """File-based metrics exporter configuration."""
+    path: str = Field(..., description="Output file path")
+    compact: bool = Field(True, description="Use compact JSON format")
+
+
+class MetricsConfig(BaseModel):
+    """Metrics collection and export configuration."""
+    enabled: bool = Field(True, description="Enable metrics collection")
+    export_interval_seconds: int = Field(60, description="Export interval in seconds")
+    otlp: Optional[OtlpConfig] = Field(None, description="OTLP exporter configuration")
+    file: Optional[FileMetricsConfig] = Field(None, description="File exporter configuration")
+
+
+class SchedulerMetricsSnapshot(BaseModel):
+    """Scheduler metrics snapshot."""
+    jobs_total: int = Field(0, description="Total scheduled jobs")
+    jobs_active: int = Field(0, description="Active jobs")
+    jobs_paused: int = Field(0, description="Paused jobs")
+    runs_total: int = Field(0, description="Total runs completed")
+    runs_succeeded: int = Field(0, description="Successful runs")
+    runs_failed: int = Field(0, description="Failed runs")
+
+
+class TaskManagerMetricsSnapshot(BaseModel):
+    """Task manager metrics snapshot."""
+    tasks_active: int = Field(0, description="Active tasks")
+    tasks_queued: int = Field(0, description="Queued tasks")
+    tasks_completed: int = Field(0, description="Completed tasks")
+    tasks_failed: int = Field(0, description="Failed tasks")
+
+
+class LoadBalancerMetricsSnapshot(BaseModel):
+    """Load balancer metrics snapshot."""
+    total_requests: int = Field(0, description="Total requests processed")
+    active_connections: int = Field(0, description="Active connections")
+    backends_healthy: int = Field(0, description="Healthy backends")
+    backends_total: int = Field(0, description="Total backends")
+
+
+class SystemResourceMetricsSnapshot(BaseModel):
+    """System resource metrics snapshot."""
+    cpu_usage_percent: float = Field(0.0, description="CPU usage percentage")
+    memory_usage_bytes: int = Field(0, description="Memory usage in bytes")
+    memory_usage_percent: float = Field(0.0, description="Memory usage percentage")
+    disk_usage_bytes: int = Field(0, description="Disk usage in bytes")
+    disk_usage_percent: float = Field(0.0, description="Disk usage percentage")
+
+
+class MetricsSnapshot(BaseModel):
+    """Complete metrics snapshot at a point in time."""
+    timestamp: datetime = Field(..., description="Snapshot timestamp")
+    scheduler: Optional[SchedulerMetricsSnapshot] = Field(None, description="Scheduler metrics")
+    task_manager: Optional[TaskManagerMetricsSnapshot] = Field(None, description="Task manager metrics")
+    load_balancer: Optional[LoadBalancerMetricsSnapshot] = Field(None, description="Load balancer metrics")
+    system: Optional[SystemResourceMetricsSnapshot] = Field(None, description="System resource metrics")
 

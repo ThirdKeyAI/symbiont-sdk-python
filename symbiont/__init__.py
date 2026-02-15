@@ -7,9 +7,22 @@ from .client import Client
 from .exceptions import (
     APIError,
     AuthenticationError,
+    MetricsConfigError,
+    MetricsExportError,
     NotFoundError,
     RateLimitError,
+    SkillLoadError,
+    SkillScanError,
     SymbiontError,
+    WebhookVerificationError,
+)
+from .markdown_memory import AgentMemoryContext, MarkdownMemoryStore, StorageStats
+from .metrics import (
+    CompositeExporter,
+    FileMetricsExporter,
+    MetricsClient,
+    MetricsCollector,
+    MetricsSnapshot,
 )
 from .models import (
     # Core Agent Models
@@ -97,11 +110,23 @@ from .schedules import (
     ScheduleSummary,
     UpdateScheduleRequest,
 )
+from .skills import (
+    LoadedSkill,
+    ScanFinding,
+    ScanResult,
+    ScanSeverity,
+    SignatureStatus,
+    SkillLoader,
+    SkillLoaderConfig,
+    SkillMetadata,
+    SkillScanner,
+)
+from .webhooks import HmacVerifier, JwtVerifier, SignatureVerifier, WebhookProvider
 
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 __all__ = [
     # Client
@@ -155,10 +180,29 @@ __all__ = [
     'ScheduleActionResponse', 'DeleteScheduleResponse',
     'SchedulerHealthResponse',
 
+    # Webhook Verification
+    'WebhookProvider', 'HmacVerifier', 'JwtVerifier', 'SignatureVerifier',
+
+    # Markdown Memory
+    'MarkdownMemoryStore', 'AgentMemoryContext', 'StorageStats',
+
+    # Skills
+    'SkillLoader', 'SkillScanner', 'LoadedSkill', 'ScanResult', 'ScanFinding',
+    'ScanSeverity', 'SignatureStatus', 'SkillLoaderConfig', 'SkillMetadata',
+
+    # Metrics
+    'MetricsClient', 'MetricsCollector', 'MetricsSnapshot',
+    'FileMetricsExporter', 'CompositeExporter',
+
     # Exceptions
     'SymbiontError',
     'APIError',
     'AuthenticationError',
     'NotFoundError',
     'RateLimitError',
+    'WebhookVerificationError',
+    'SkillLoadError',
+    'SkillScanError',
+    'MetricsExportError',
+    'MetricsConfigError',
 ]

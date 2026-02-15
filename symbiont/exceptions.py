@@ -283,3 +283,77 @@ class EndpointRateLimitError(EndpointError):
         """
         super().__init__(message, 429)
         self.endpoint_id = endpoint_id
+
+
+# =============================================================================
+# Phase 5 Webhook, Skill & Metrics Exception Classes
+# =============================================================================
+
+class WebhookVerificationError(SymbiontError):
+    """Raised when webhook signature verification fails."""
+
+    def __init__(self, message: str = "Webhook verification failed", header_name: str = None):
+        """Initialize the WebhookVerificationError.
+
+        Args:
+            message: Error message describing the verification failure.
+            header_name: Optional header name that failed verification.
+        """
+        super().__init__(message)
+        self.header_name = header_name
+
+
+class SkillLoadError(SymbiontError):
+    """Raised when a skill fails to load."""
+
+    def __init__(self, message: str = "Skill load error", skill_path: str = None):
+        """Initialize the SkillLoadError.
+
+        Args:
+            message: Error message describing the load failure.
+            skill_path: Optional path to the skill that failed to load.
+        """
+        super().__init__(message)
+        self.skill_path = skill_path
+
+
+class SkillScanError(SymbiontError):
+    """Raised when skill scanning encounters an error."""
+
+    def __init__(self, message: str = "Skill scan error", findings_count: int = None):
+        """Initialize the SkillScanError.
+
+        Args:
+            message: Error message describing the scan error.
+            findings_count: Optional number of findings detected.
+        """
+        super().__init__(message)
+        self.findings_count = findings_count
+
+
+class MetricsExportError(SymbiontError):
+    """Raised when metrics export operations fail."""
+
+    def __init__(self, message: str = "Metrics export failed", backend: str = None):
+        """Initialize the MetricsExportError.
+
+        Args:
+            message: Error message describing the export failure.
+            backend: Optional backend name that failed.
+        """
+        super().__init__(message)
+        self.backend = backend
+
+
+class MetricsConfigError(SymbiontError):
+    """Raised when metrics configuration is invalid."""
+
+    def __init__(self, message: str = "Metrics configuration error", config_field: str = None):
+        """Initialize the MetricsConfigError.
+
+        Args:
+            message: Error message describing the configuration issue.
+            config_field: Optional configuration field that is invalid.
+        """
+        super().__init__(message)
+        self.config_field = config_field

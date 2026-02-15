@@ -153,6 +153,7 @@ class Client:
         self._schedules: Optional[ScheduleClient] = None
         self._channels: Optional[ChannelClient] = None
         self._agentpin: Optional[Any] = None
+        self._metrics_client: Optional[Any] = None
 
     @property
     def schedules(self) -> ScheduleClient:
@@ -175,6 +176,14 @@ class Client:
             from .agentpin import AgentPinClient
             self._agentpin = AgentPinClient(self)
         return self._agentpin
+
+    @property
+    def metrics_client(self):
+        """Lazy-loaded metrics client for runtime metrics queries."""
+        if self._metrics_client is None:
+            from .metrics import MetricsClient
+            self._metrics_client = MetricsClient(self)
+        return self._metrics_client
 
     def _request(self, method: str, endpoint: str, **kwargs):
         """Make an HTTP request to the API.

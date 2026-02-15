@@ -48,6 +48,14 @@ dev = [
     "ruff>=0.1.0",
     "bandit>=1.7.0",
 ]
+skills = [
+    "schemapin>=0.2.0",
+]
+metrics = [
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp>=1.20.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/thirdkeyai/symbiont-sdk-python"
