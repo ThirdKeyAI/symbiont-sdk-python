@@ -1,7 +1,6 @@
 ---
-title: Symbiont SDK for Python
+name: symbiont-sdk-python
 description: Python SDK for the Symbiont agent runtime — agent lifecycle, webhook verification, AgentPin identity, memory systems, skill scanning, metrics, scheduling, and vector search
-version: 0.6.0
 ---
 
 # Symbiont SDK for Python — Skills Guide
