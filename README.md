@@ -1124,7 +1124,62 @@ pytest
 - pydantic
 - python-dotenv
 
-## What's New in v0.6.0
+## Reasoning Loop (v1.6.0)
+
+Run autonomous reasoning loops with policy gates, circuit breakers, and knowledge recall:
+
+```python
+from symbiont import Client, RunReasoningLoopRequest, LoopConfig
+
+client = Client()
+
+# Run a reasoning loop
+request = RunReasoningLoopRequest(
+    config=LoopConfig(max_iterations=10, timeout_ms=60000),
+    initial_message="Analyze the latest sales data and create a report.",
+)
+response = client.reasoning.run_loop("agent-1", request)
+
+print(f"Output: {response.result.output}")
+print(f"Iterations: {response.result.iterations}")
+print(f"Termination: {response.result.termination_reason.type}")
+
+# Check loop status
+status = client.reasoning.get_loop_status("agent-1", response.loop_id)
+
+# Read journal entries
+journal = client.reasoning.get_journal_entries("agent-1", limit=50)
+
+# Cedar policy management
+from symbiont import CedarPolicy
+
+client.reasoning.add_cedar_policy("agent-1", CedarPolicy(
+    name="deny-file-write",
+    source='forbid(principal, action == "tool_call", resource) when { resource.name == "write_file" };',
+    active=True,
+))
+policies = client.reasoning.list_cedar_policies("agent-1")
+
+# Circuit breaker status
+breakers = client.reasoning.get_circuit_breaker_status("agent-1")
+
+# Knowledge bridge
+client.reasoning.store_knowledge("agent-1", "sales", "grew_by", "15%")
+facts = client.reasoning.recall_knowledge("agent-1", "sales growth")
+```
+
+## What's New in v1.6.0
+
+- **Reasoning Loop** — `client.reasoning.run_loop()`, `get_loop_status()`, `cancel_loop()` for autonomous ORGA cycles
+- **Journal System** — `get_journal_entries()`, `compact_journal()` for loop event replay and auditing
+- **Cedar Policies** — `list_cedar_policies()`, `add_cedar_policy()`, `evaluate_cedar_policy()` for action-level governance
+- **Circuit Breakers** — `get_circuit_breaker_status()`, `reset_circuit_breaker()` for tool failure isolation
+- **Knowledge Bridge** — `recall_knowledge()`, `store_knowledge()` for persistent agent memory
+- **Pydantic Models** — Full type coverage for all reasoning types in `symbiont.reasoning`
+
+### Previous Releases
+
+#### v0.6.0
 
 ### Webhook Verification
 

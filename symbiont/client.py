@@ -154,6 +154,7 @@ class Client:
         self._channels: Optional[ChannelClient] = None
         self._agentpin: Optional[Any] = None
         self._metrics_client: Optional[Any] = None
+        self._reasoning: Optional[Any] = None
 
     @property
     def schedules(self) -> ScheduleClient:
@@ -176,6 +177,14 @@ class Client:
             from .agentpin import AgentPinClient
             self._agentpin = AgentPinClient(self)
         return self._agentpin
+
+    @property
+    def reasoning(self):
+        """Lazy-loaded reasoning client for loop, journal, Cedar, circuit breaker, and knowledge operations."""
+        if self._reasoning is None:
+            from .reasoning_client import ReasoningClient
+            self._reasoning = ReasoningClient(self)
+        return self._reasoning
 
     @property
     def metrics_client(self):

@@ -121,12 +121,43 @@ from .skills import (
     SkillMetadata,
     SkillScanner,
 )
+from .reasoning import (
+    CedarPolicy,
+    CircuitBreakerConfig,
+    CircuitBreakerStatus,
+    CircuitState,
+    FinishReason,
+    InferenceOptions,
+    InferenceResponse,
+    JournalEntry,
+    KnowledgeConfig,
+    LoopConfig,
+    LoopDecision,
+    LoopDecisionType,
+    LoopEvent,
+    LoopEventType,
+    LoopResult,
+    LoopState,
+    Observation,
+    ProposedAction,
+    ProposedActionType,
+    RecoveryStrategy,
+    RecoveryStrategyType,
+    RunReasoningLoopRequest,
+    RunReasoningLoopResponse,
+    TerminationReason,
+    TerminationReasonType,
+    ToolCallRequest,
+    ToolDefinition,
+    Usage,
+)
+from .reasoning_client import ReasoningClient
 from .webhooks import HmacVerifier, JwtVerifier, SignatureVerifier, WebhookProvider
 
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "0.6.0"
+__version__ = "1.6.0"
 
 __all__ = [
     # Client
@@ -193,6 +224,20 @@ __all__ = [
     # Metrics
     'MetricsClient', 'MetricsCollector', 'MetricsSnapshot',
     'FileMetricsExporter', 'CompositeExporter',
+
+    # Reasoning Loop
+    'ReasoningClient',
+    'Usage', 'ToolDefinition', 'ToolCallRequest',
+    'FinishReason', 'InferenceOptions', 'InferenceResponse',
+    'Observation', 'ProposedAction', 'ProposedActionType',
+    'LoopDecision', 'LoopDecisionType',
+    'RecoveryStrategy', 'RecoveryStrategyType',
+    'TerminationReason', 'TerminationReasonType',
+    'LoopConfig', 'LoopState', 'LoopResult',
+    'LoopEvent', 'LoopEventType', 'JournalEntry',
+    'CedarPolicy', 'KnowledgeConfig',
+    'CircuitState', 'CircuitBreakerConfig', 'CircuitBreakerStatus',
+    'RunReasoningLoopRequest', 'RunReasoningLoopResponse',
 
     # Exceptions
     'SymbiontError',
