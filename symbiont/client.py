@@ -411,7 +411,7 @@ class Client:
 
             return {
                 "access_token": new_token.token,
-                "token_type": "Bearer",
+                "token_type": "Bearer",  # nosec B105
                 "expires_in": self.config.auth.jwt_expiration_seconds
             }
         else:
