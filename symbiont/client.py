@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Union
 import requests
 
 from .auth import AuthManager, AuthUser
+from .channels import ChannelClient
 from .config import ClientConfig, ConfigManager
 from .exceptions import (
     APIError,
@@ -84,7 +85,6 @@ from .models import (
     WebhookTriggerResponse,
     WorkflowExecutionRequest,
 )
-from .channels import ChannelClient
 from .schedules import ScheduleClient
 
 

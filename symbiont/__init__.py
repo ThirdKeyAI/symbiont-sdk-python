@@ -96,31 +96,6 @@ from .models import (
     WorkflowExecutionRequest,
     WorkflowExecutionResponse,
 )
-from .schedules import (
-    CreateScheduleRequest,
-    CreateScheduleResponse,
-    DeleteScheduleResponse,
-    NextRunsResponse,
-    ScheduleActionResponse,
-    ScheduleClient,
-    ScheduleDetail,
-    ScheduleHistoryResponse,
-    SchedulerHealthResponse,
-    ScheduleRunEntry,
-    ScheduleSummary,
-    UpdateScheduleRequest,
-)
-from .skills import (
-    LoadedSkill,
-    ScanFinding,
-    ScanResult,
-    ScanSeverity,
-    SignatureStatus,
-    SkillLoader,
-    SkillLoaderConfig,
-    SkillMetadata,
-    SkillScanner,
-)
 from .reasoning import (
     CedarPolicy,
     CircuitBreakerConfig,
@@ -152,12 +127,37 @@ from .reasoning import (
     Usage,
 )
 from .reasoning_client import ReasoningClient
+from .schedules import (
+    CreateScheduleRequest,
+    CreateScheduleResponse,
+    DeleteScheduleResponse,
+    NextRunsResponse,
+    ScheduleActionResponse,
+    ScheduleClient,
+    ScheduleDetail,
+    ScheduleHistoryResponse,
+    SchedulerHealthResponse,
+    ScheduleRunEntry,
+    ScheduleSummary,
+    UpdateScheduleRequest,
+)
+from .skills import (
+    LoadedSkill,
+    ScanFinding,
+    ScanResult,
+    ScanSeverity,
+    SignatureStatus,
+    SkillLoader,
+    SkillLoaderConfig,
+    SkillMetadata,
+    SkillScanner,
+)
 from .webhooks import HmacVerifier, JwtVerifier, SignatureVerifier, WebhookProvider
 
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "1.6.0"
+__version__ = "1.6.1"
 
 __all__ = [
     # Client
