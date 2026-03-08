@@ -33,7 +33,7 @@ The SDK is also available as a Docker image from GitHub Container Registry:
 docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:latest
 
 # Or pull a specific version
-docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:v0.6.0
+docker pull ghcr.io/thirdkeyai/symbiont-sdk-python:latest
 ```
 
 #### Running with Docker
@@ -73,6 +73,40 @@ docker build -t symbiont-sdk:local .
 
 # Run locally built image
 docker run -it --rm symbiont-sdk:local
+```
+
+## Symbiont Runtime
+
+The SDK connects to a running Symbiont runtime (default: `http://localhost:8080/api/v1`). Install the runtime using one of the following methods:
+
+### Homebrew
+
+```bash
+brew tap thirdkeyai/tap && brew install symbi
+```
+
+### Install Script
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/thirdkeyai/symbiont/main/scripts/install.sh | bash
+```
+
+### Docker
+
+```bash
+docker run -d -p 8080:8080 ghcr.io/thirdkeyai/symbiont:latest
+```
+
+### Pre-built Binaries
+
+Download pre-built binaries from [GitHub Releases](https://github.com/thirdkeyai/symbiont/releases).
+
+> **Note:** Pre-built binaries are tested but considered less reliable than cargo install or Docker.
+
+### From Source
+
+```bash
+cargo install symbiont
 ```
 
 ## Configuration
