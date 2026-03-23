@@ -1133,3 +1133,71 @@ class MetricsSnapshot(BaseModel):
     load_balancer: Optional[LoadBalancerMetricsSnapshot] = Field(None, description="Load balancer metrics")
     system: Optional[SystemResourceMetricsSnapshot] = Field(None, description="System resource metrics")
 
+
+# =============================================================================
+# ToolClad Models
+# =============================================================================
+
+class ToolManifestInfo(BaseModel):
+    """Summary of a ToolClad manifest."""
+    name: str
+    version: str
+    description: str
+    risk_tier: str
+    human_approval: bool = False
+    arg_count: int
+    backend: str  # "shell", "http", "mcp", "session", "browser"
+    source_path: str
+
+
+class ToolValidationResult(BaseModel):
+    """Result of manifest validation."""
+    valid: bool
+    errors: List[str] = []
+    warnings: List[str] = []
+
+
+class ToolTestResult(BaseModel):
+    """Result of a tool dry-run."""
+    command: str
+    validations: List[str]
+    cedar: Optional[str] = None
+    timeout: int
+
+
+class ToolExecutionResult(BaseModel):
+    """Evidence envelope from tool execution."""
+    status: str
+    scan_id: str
+    tool: str
+    command: str
+    duration_ms: int
+    timestamp: str
+    output_hash: Optional[str] = None
+    exit_code: int = 0
+    stderr: str = ""
+    results: Dict[str, Any] = {}
+
+
+# =============================================================================
+# Communication Policy Models
+# =============================================================================
+
+class CommunicationRule(BaseModel):
+    """Inter-agent communication policy rule."""
+    id: Optional[str] = None
+    from_agent: str
+    to_agent: str
+    action: str  # "allow" or "deny"
+    effect: str = "allow"
+    reason: str = ""
+    priority: int = 0
+    max_depth: Optional[int] = None
+
+
+class CommunicationEvaluation(BaseModel):
+    """Result of a communication policy evaluation."""
+    allowed: bool
+    rule: Optional[CommunicationRule] = None
+    reason: str = ""
+

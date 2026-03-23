@@ -34,6 +34,9 @@ from .models import (
     AgentState,
     AgentStatusResponse,
     AnalysisResults,
+    # Communication Policy Models
+    CommunicationEvaluation,
+    CommunicationRule,
     ContextQuery,
     ContextResponse,
     # Agent DSL Models
@@ -82,8 +85,13 @@ from .models import (
     SystemMetrics,
     # Tool Review Models
     Tool,
+    # ToolClad Models
+    ToolExecutionResult,
+    ToolManifestInfo,
     ToolProvider,
     ToolSchema,
+    ToolTestResult,
+    ToolValidationResult,
     VaultAuthMethod,
     VaultConfig,
     VectorMetadata,
@@ -127,6 +135,7 @@ from .reasoning import (
     Usage,
 )
 from .reasoning_client import ReasoningClient
+from .toolclad import ToolCladClient
 from .schedules import (
     CreateScheduleRequest,
     CreateScheduleResponse,
@@ -157,7 +166,7 @@ from .webhooks import HmacVerifier, JwtVerifier, SignatureVerifier, WebhookProvi
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "1.6.1"
+__version__ = "1.8.1"
 
 __all__ = [
     # Client
@@ -224,6 +233,13 @@ __all__ = [
     # Metrics
     'MetricsClient', 'MetricsCollector', 'MetricsSnapshot',
     'FileMetricsExporter', 'CompositeExporter',
+
+    # ToolClad
+    'ToolCladClient',
+    'ToolManifestInfo', 'ToolValidationResult', 'ToolTestResult', 'ToolExecutionResult',
+
+    # Communication Policy
+    'CommunicationRule', 'CommunicationEvaluation',
 
     # Reasoning Loop
     'ReasoningClient',

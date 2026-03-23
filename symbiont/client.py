@@ -155,6 +155,7 @@ class Client:
         self._agentpin: Optional[Any] = None
         self._metrics_client: Optional[Any] = None
         self._reasoning: Optional[Any] = None
+        self._toolclad: Optional[Any] = None
 
     @property
     def schedules(self) -> ScheduleClient:
@@ -193,6 +194,14 @@ class Client:
             from .metrics import MetricsClient
             self._metrics_client = MetricsClient(self)
         return self._metrics_client
+
+    @property
+    def toolclad(self):
+        """Lazy-loaded ToolClad manifest management client."""
+        if self._toolclad is None:
+            from .toolclad import ToolCladClient
+            self._toolclad = ToolCladClient(self)
+        return self._toolclad
 
     def _request(self, method: str, endpoint: str, **kwargs):
         """Make an HTTP request to the API.
@@ -1436,4 +1445,94 @@ class Client:
             Dict[str, Any]: Operation confirmation
         """
         response = self._request("POST", f"endpoints/{endpoint_id}/disable")
+        return response.json()
+
+    # =============================================================================
+    # Inter-Agent Communication Policy Methods
+    # =============================================================================
+
+    def list_communication_rules(self) -> List[Dict]:
+        """List all communication policy rules.
+
+        Returns:
+            List[Dict]: List of communication policy rules
+        """
+        response = self._request("GET", "api/v1/communication/rules")
+        return response.json()
+
+    def add_communication_rule(self, rule: Dict) -> Dict:
+        """Add a communication policy rule.
+
+        Args:
+            rule: Dict with keys: from_agent, to_agent, action (allow/deny),
+                  effect, reason, priority, max_depth
+
+        Returns:
+            Dict: Created rule confirmation
+        """
+        response = self._request("POST", "api/v1/communication/rules", json=rule)
+        return response.json()
+
+    def remove_communication_rule(self, rule_id: str) -> Dict:
+        """Remove a communication policy rule by ID.
+
+        Args:
+            rule_id: The rule identifier
+
+        Returns:
+            Dict: Removal confirmation
+        """
+        response = self._request("DELETE", f"api/v1/communication/rules/{rule_id}")
+        return response.json()
+
+    def evaluate_communication(self, sender: str, recipient: str, action: str) -> Dict:
+        """Evaluate whether a communication is allowed by policy.
+
+        Args:
+            sender: Sending agent identifier
+            recipient: Receiving agent identifier
+            action: The action to evaluate
+
+        Returns:
+            Dict with 'allowed' (bool), 'rule' (matching rule), 'reason'.
+        """
+        response = self._request("POST", "api/v1/communication/evaluate", json={
+            "sender": sender,
+            "recipient": recipient,
+            "action": action,
+        })
+        return response.json()
+
+    # =============================================================================
+    # Agent Lifecycle Methods
+    # =============================================================================
+
+    def delete_agent(self, agent_id: str) -> Dict:
+        """Delete an agent and its metadata.
+
+        Args:
+            agent_id: The agent identifier
+
+        Returns:
+            Dict: Deletion confirmation
+        """
+        response = self._request("DELETE", f"api/v1/agents/{agent_id}")
+        return response.json()
+
+    def re_execute_agent(self, agent_id: str, input_data: Any = None) -> Dict:
+        """Re-execute an agent with optional new input.
+
+        Resets the agent's ORGA loop state and starts a new execution.
+
+        Args:
+            agent_id: The agent identifier
+            input_data: Optional new input data for the agent
+
+        Returns:
+            Dict: Re-execution result
+        """
+        payload = {}
+        if input_data is not None:
+            payload["input"] = input_data
+        response = self._request("POST", f"api/v1/agents/{agent_id}/re-execute", json=payload)
         return response.json()

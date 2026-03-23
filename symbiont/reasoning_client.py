@@ -184,3 +184,31 @@ class ReasoningClient:
                 "confidence": confidence,
             },
         )
+
+    # -------------------------------------------------------------------------
+    # ORGA-Adaptive Features
+    # -------------------------------------------------------------------------
+
+    def get_tool_profiles(self, agent_id: str) -> List[Dict]:
+        """Get tool execution profiles for an agent.
+
+        Returns timing statistics and success rates per tool.
+
+        ``GET /api/v1/agents/{id}/reasoning/tool-profiles``
+        """
+        return self._request(
+            "GET", f"/api/v1/agents/{agent_id}/reasoning/tool-profiles"
+        )
+
+    def get_loop_diagnostics(self, agent_id: str, loop_id: str) -> Dict:
+        """Get diagnostics for a reasoning loop.
+
+        Includes stuck-loop detection status, iteration history,
+        and adaptive parameters.
+
+        ``GET /api/v1/agents/{id}/reasoning/{loop_id}/diagnostics``
+        """
+        return self._request(
+            "GET",
+            f"/api/v1/agents/{agent_id}/reasoning/{loop_id}/diagnostics",
+        )

@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2026-03-23
+
+### Added
+
+#### ToolClad Manifest Management
+- **ToolCladClient** — Full client for ToolClad manifest operations via `client.toolclad`
+  - `list_tools()` — List all discovered `.clad.toml` manifests
+  - `validate_manifest()` — Validate a manifest file
+  - `test_tool()` — Dry-run a tool (no execution)
+  - `get_schema()` — Get MCP-compatible JSON schema for a tool
+  - `execute_tool()` — Execute a tool with validated arguments, returns evidence envelope
+  - `get_tool_info()` — Get detailed tool manifest information
+  - `reload_tools()` — Trigger hot-reload of tool manifests
+- **Pydantic models**: `ToolManifestInfo`, `ToolValidationResult`, `ToolTestResult`, `ToolExecutionResult`
+
+#### Inter-Agent Communication Policy Gate
+- `list_communication_rules()` — List all communication policy rules
+- `add_communication_rule()` — Add a policy rule (allow/deny between agents)
+- `remove_communication_rule()` — Remove a rule by ID
+- `evaluate_communication()` — Evaluate whether a communication is allowed
+- **Pydantic models**: `CommunicationRule`, `CommunicationEvaluation`
+
+#### Agent Lifecycle
+- `delete_agent()` — Delete an agent and its metadata
+- `re_execute_agent()` — Re-execute an agent with optional new input (resets ORGA loop)
+
+#### ORGA-Adaptive Features
+- `reasoning.get_tool_profiles()` — Tool execution timing statistics and success rates
+- `reasoning.get_loop_diagnostics()` — Stuck-loop detection, iteration history, adaptive parameters
+
+### Changed
+- Version alignment with Symbiont runtime v1.8.1
+
+---
+
 ## [1.6.1] - 2026-02-28
 
 ### Added
