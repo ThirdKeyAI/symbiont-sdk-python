@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-04-22
+
+### Added
+
+#### HTTP Input LLM Invocation Models (Symbiont v1.10.0)
+- **`WebhookInvocationRequest`** — Caller-supplied payload accepted by the
+  HTTP Input endpoint: `prompt` or `message` (user text), optional
+  `system_prompt` (capped at 4096 bytes by the runtime, truncated on a
+  UTF-8 character boundary), plus pass-through of additional fields.
+- **`WebhookToolRun`** — Per-tool ORGA execution preview (`tool`, `input`,
+  `output_preview`). `output_preview` is UTF-8 safe and truncated to at
+  most 500 bytes by the runtime.
+- **`WebhookExecutionStartedResponse`** — Returned when the target agent is
+  in the `Running` state and the request is dispatched on the communication
+  bus (`status: "execution_started"` with `agent_id`, `message_id`,
+  `latency_ms`, `timestamp`).
+- **`WebhookCompletedResponse`** — Returned when the agent is not running
+  and the request is served by the on-demand LLM invocation path, which
+  runs an ORGA tool-calling loop against ToolClad manifests
+  (`status: "completed"` with `response`, `tool_runs`, `model`, `provider`,
+  `latency_ms`, `timestamp`).
+- **`WebhookInvocationResponse`** — Discriminated union alias
+  (`Union[WebhookExecutionStartedResponse, WebhookCompletedResponse]`).
+- **`WebhookInvocationStatus`** — String enum with
+  `EXECUTION_STARTED` and `COMPLETED`.
+
+### Changed
+- Version alignment with Symbiont runtime v1.10.0.
+- Package version bumped to 1.10.0 in `setup.py` and
+  `symbiont.__version__`.
+
+### Notes
+- Symbiont v1.9.0 and v1.9.1 introduced ToolClad v0.4.0 runtime features
+  (session / browser execution modes, HTTP and MCP proxy backends, output
+  parsers, custom types, secrets injection, W3C `traceparent` propagation,
+  bounded channels, rate limiting, optional LanceDB feature flag). These
+  changes are runtime-side; existing SDK models (`ToolManifestInfo`,
+  `ToolExecutionResult`, etc.) remain backward compatible. The `backend`
+  string on `ToolManifestInfo` now accepts `"http"`, `"mcp"`, `"session"`,
+  and `"browser"` in addition to previously documented values.
+
+---
+
 ## [1.8.1] - 2026-03-23
 
 ### Added

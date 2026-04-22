@@ -98,6 +98,13 @@ from .models import (
     VectorSearchRequest,
     VectorSearchResponse,
     VectorSearchResult,
+    # HTTP Input Invocation Models (Symbiont v1.10.0)
+    WebhookCompletedResponse,
+    WebhookExecutionStartedResponse,
+    WebhookInvocationRequest,
+    WebhookInvocationResponse,
+    WebhookInvocationStatus,
+    WebhookToolRun,
     WebhookTriggerRequest,
     WebhookTriggerResponse,
     # Workflow Models
@@ -166,7 +173,7 @@ from .webhooks import HmacVerifier, JwtVerifier, SignatureVerifier, WebhookProvi
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "1.8.1"
+__version__ = "1.10.0"
 
 __all__ = [
     # Client
@@ -207,6 +214,10 @@ __all__ = [
     'RouteMatchType', 'AgentRoutingRule', 'HttpResponseControlConfig',
     'HttpInputConfig', 'HttpInputServerInfo', 'HttpInputCreateRequest', 'HttpInputUpdateRequest',
     'WebhookTriggerRequest', 'WebhookTriggerResponse',
+
+    # HTTP Input Invocation Models (Symbiont v1.10.0)
+    'WebhookInvocationStatus', 'WebhookInvocationRequest', 'WebhookToolRun',
+    'WebhookExecutionStartedResponse', 'WebhookCompletedResponse', 'WebhookInvocationResponse',
 
     # AgentPin
     'AgentPinClient',

@@ -997,6 +997,85 @@ class WebhookVerificationConfig(BaseModel):
 
 
 # =============================================================================
+# HTTP Input invocation models (Symbiont Runtime v1.10.0)
+#
+# The HTTP Input handler dispatches an incoming webhook either to a running
+# agent via the runtime communication bus, or — if the agent is not running
+# or the bus delivery fails — falls back to an on-demand LLM ORGA tool-calling
+# loop against ToolClad manifests.
+# =============================================================================
+
+
+class WebhookInvocationStatus(str, Enum):
+    """Status of an HTTP Input invocation."""
+    EXECUTION_STARTED = "execution_started"
+    COMPLETED = "completed"
+
+
+class WebhookInvocationRequest(BaseModel):
+    """Caller-supplied payload accepted by the HTTP Input endpoint.
+
+    The runtime extracts the user message from ``prompt`` (preferred) or
+    ``message``; if neither is present the entire JSON body is rendered as
+    the user message. ``system_prompt`` is optional and is capped at
+    4096 bytes by the runtime (truncated on a UTF-8 character boundary).
+    Additional fields are permitted and passed through.
+    """
+    prompt: Optional[str] = Field(None, description="User prompt (preferred)")
+    message: Optional[str] = Field(None, description="Alternative user message field")
+    system_prompt: Optional[str] = Field(
+        None,
+        description="Optional system prompt append (capped at 4096 bytes by the runtime)",
+        max_length=4096,
+    )
+
+    model_config = {"extra": "allow"}
+
+
+class WebhookToolRun(BaseModel):
+    """A single ToolClad tool execution performed during an LLM ORGA invocation.
+
+    ``output_preview`` is truncated on a UTF-8 character boundary to at most
+    500 bytes by the runtime.
+    """
+    tool: str = Field(..., description="ToolClad manifest name")
+    input: Dict[str, Any] = Field(default_factory=dict, description="Tool call input arguments")
+    output_preview: str = Field(..., description="UTF-8 safe preview of tool output (<= 500 bytes)")
+
+
+class WebhookExecutionStartedResponse(BaseModel):
+    """Response when the target agent was running and the request was
+    dispatched on the runtime communication bus.
+    """
+    status: str = Field("execution_started", description="Always 'execution_started'")
+    agent_id: str = Field(..., description="Target agent identifier")
+    message_id: str = Field(..., description="Runtime message identifier for the dispatch")
+    latency_ms: int = Field(..., description="Dispatch latency in milliseconds")
+    timestamp: str = Field(..., description="RFC 3339 timestamp")
+
+
+class WebhookCompletedResponse(BaseModel):
+    """Response when the request was served by the on-demand LLM ORGA
+    tool-calling loop.
+    """
+    status: str = Field("completed", description="Always 'completed'")
+    agent_id: str = Field(..., description="Target agent identifier")
+    response: str = Field(..., description="Final assistant text from the LLM")
+    tool_runs: List[WebhookToolRun] = Field(
+        default_factory=list,
+        description="Per-tool execution previews from the ORGA loop",
+    )
+    model: str = Field(..., description="LLM model identifier used")
+    provider: str = Field(..., description="LLM provider name (e.g. 'anthropic', 'openai', 'openrouter')")
+    latency_ms: int = Field(..., description="End-to-end loop latency in milliseconds")
+    timestamp: str = Field(..., description="RFC 3339 timestamp")
+
+
+#: Discriminated union of all HTTP Input invocation responses.
+WebhookInvocationResponse = Union[WebhookExecutionStartedResponse, WebhookCompletedResponse]
+
+
+# =============================================================================
 # Skills Models
 # =============================================================================
 
