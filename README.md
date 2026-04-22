@@ -1202,7 +1202,32 @@ client.reasoning.store_knowledge("agent-1", "sales", "grew_by", "15%")
 facts = client.reasoning.recall_knowledge("agent-1", "sales growth")
 ```
 
-## What's New in v1.6.0
+## What's New in v1.10.0
+
+- **HTTP Input LLM invocation models** — Pydantic models for the Symbiont
+  v1.10.0 HTTP Input handler response shapes:
+  `WebhookExecutionStartedResponse` (runtime dispatch),
+  `WebhookCompletedResponse` (on-demand LLM ORGA loop),
+  plus `WebhookToolRun`, `WebhookInvocationRequest`,
+  `WebhookInvocationStatus`, and the `WebhookInvocationResponse` union.
+- **Alignment with Symbiont runtime v1.10.0** — package version bumped to
+  1.10.0. Symbiont v1.9.0 / v1.9.1 added ToolClad v0.4.0 runtime features
+  (session / browser execution modes, HTTP and MCP proxy backends, output
+  parsers, custom types, secrets injection, W3C `traceparent` propagation);
+  existing SDK models remain backward compatible, and `ToolManifestInfo.backend`
+  now accepts `"http"`, `"mcp"`, `"session"`, and `"browser"` in addition
+  to previously documented values.
+
+### Previous Releases
+
+#### v1.8.1
+
+- **ToolCladClient** — `list_tools()`, `validate_manifest()`, `test_tool()`, `get_schema()`, `execute_tool()`, `get_tool_info()`, `reload_tools()`
+- **CommunicationPolicyGate client methods** — `list_communication_rules()`, `add_communication_rule()`, `remove_communication_rule()`, `evaluate_communication()`
+- **Agent lifecycle** — `delete_agent()`, `re_execute_agent()`
+- **ORGA-adaptive** — `reasoning.get_tool_profiles()`, `reasoning.get_loop_diagnostics()`
+
+#### v1.6.0
 
 - **Reasoning Loop** — `client.reasoning.run_loop()`, `get_loop_status()`, `cancel_loop()` for autonomous ORGA cycles
 - **Journal System** — `get_journal_entries()`, `compact_journal()` for loop event replay and auditing
@@ -1210,8 +1235,6 @@ facts = client.reasoning.recall_knowledge("agent-1", "sales growth")
 - **Circuit Breakers** — `get_circuit_breaker_status()`, `reset_circuit_breaker()` for tool failure isolation
 - **Knowledge Bridge** — `recall_knowledge()`, `store_knowledge()` for persistent agent memory
 - **Pydantic Models** — Full type coverage for all reasoning types in `symbiont.reasoning`
-
-### Previous Releases
 
 #### v0.6.0
 

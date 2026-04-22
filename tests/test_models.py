@@ -351,3 +351,81 @@ class TestAgentModel:
         assert len(errors) == 1
         assert errors[0]["loc"] == ("tools",)
         assert "list_type" in errors[0]["type"]
+
+
+class TestWebhookInvocationModels:
+    """Tests for HTTP Input invocation models (Symbiont v1.10.0)."""
+
+    def test_invocation_status_enum_values(self):
+        from symbiont import WebhookInvocationStatus
+
+        assert WebhookInvocationStatus.EXECUTION_STARTED.value == "execution_started"
+        assert WebhookInvocationStatus.COMPLETED.value == "completed"
+
+    def test_invocation_request_accepts_prompt(self):
+        from symbiont import WebhookInvocationRequest
+
+        req = WebhookInvocationRequest(prompt="scan target 10.0.0.1")
+        assert req.prompt == "scan target 10.0.0.1"
+        assert req.message is None
+        assert req.system_prompt is None
+
+    def test_invocation_request_allows_extra_fields(self):
+        from symbiont import WebhookInvocationRequest
+
+        req = WebhookInvocationRequest(prompt="x", target="10.0.0.1", tags=["a", "b"])
+        dumped = req.model_dump()
+        assert dumped["target"] == "10.0.0.1"
+        assert dumped["tags"] == ["a", "b"]
+
+    def test_invocation_request_rejects_oversized_system_prompt(self):
+        from symbiont import WebhookInvocationRequest
+
+        with pytest.raises(ValidationError):
+            WebhookInvocationRequest(system_prompt="x" * 4097)
+
+    def test_tool_run_roundtrip(self):
+        from symbiont import WebhookToolRun
+
+        run = WebhookToolRun(
+            tool="nmap",
+            input={"target": "1.1.1.1"},
+            output_preview="open ports: 22,443",
+        )
+        assert run.tool == "nmap"
+        assert run.input["target"] == "1.1.1.1"
+        assert run.output_preview.startswith("open ports")
+
+    def test_execution_started_response(self):
+        from symbiont import WebhookExecutionStartedResponse
+
+        resp = WebhookExecutionStartedResponse(
+            agent_id="agent-1",
+            message_id="msg-1",
+            latency_ms=12,
+            timestamp="2026-04-22T00:00:00Z",
+        )
+        assert resp.status == "execution_started"
+        assert resp.latency_ms == 12
+
+    def test_completed_response_with_tool_runs(self):
+        from symbiont import WebhookCompletedResponse, WebhookToolRun
+
+        resp = WebhookCompletedResponse(
+            agent_id="agent-1",
+            response="Scan complete.",
+            tool_runs=[
+                WebhookToolRun(
+                    tool="nmap",
+                    input={"target": "1.1.1.1"},
+                    output_preview="open ports: 22",
+                ),
+            ],
+            model="claude-opus-4-7",
+            provider="anthropic",
+            latency_ms=1234,
+            timestamp="2026-04-22T00:00:00Z",
+        )
+        assert resp.status == "completed"
+        assert len(resp.tool_runs) == 1
+        assert resp.tool_runs[0].tool == "nmap"
