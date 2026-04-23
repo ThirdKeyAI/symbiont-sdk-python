@@ -1,6 +1,5 @@
 """Unit tests for reasoning models."""
 
-import pytest
 from symbiont.reasoning import (
     CedarPolicy,
     CircuitBreakerConfig,
@@ -31,7 +30,6 @@ from symbiont.reasoning import (
     ToolDefinition,
     Usage,
 )
-
 
 # =============================================================================
 # Enum Tests

@@ -1,29 +1,23 @@
 # tests/test_new_features.py
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-import os
-from datetime import datetime, timedelta
-import jwt
+
+from symbiont.auth import AuthManager, AuthUser
+from symbiont.client import Client
 
 # Import necessary classes from the symbiont-sdk
 from symbiont.config import (
-    ClientConfig,
-    ConfigManager,
     AuthConfig,
+    ClientConfig,
 )
-from symbiont.auth import AuthManager, AuthUser, Permission, Role
-from symbiont.memory import MemoryManager, MemoryNode, MemoryType, MemoryLevel
-from symbiont.qdrant import QdrantManager
-from symbiont.client import Client
+from symbiont.memory import MemoryLevel, MemoryManager, MemoryType
 from symbiont.models import (
     HttpEndpointCreateRequest,
     HttpMethod,
-    HttpEndpointResponse,
 )
-from symbiont.exceptions import (
-    AuthenticationError,
-)
+from symbiont.qdrant import QdrantManager
 
 # Mock data and constants
 TEST_SECRET_KEY = "your-test-secret-key"
@@ -72,7 +66,7 @@ def qdrant_manager(mock_qdrant_client):
 @pytest.fixture
 def mock_client(mock_config):
     """Fixture for the API client with mocked requests."""
-    with patch('requests.request') as mock_request:
+    with patch('requests.request'):
         client = Client(config=mock_config)
         # We are mocking the internal _request method, not the requests library directly
         client._request = MagicMock()
@@ -91,7 +85,7 @@ def test_config_manager_env_override(monkeypatch):
     # The model needs to be reloaded to pick up the new env vars
     from symbiont.config import ClientConfig
     ClientConfig.model_rebuild(force=True)
-    
+
     config = ClientConfig()
 
     assert config.base_url == "https://new-api.symbiont.com"
@@ -102,7 +96,7 @@ def test_jwt_creation_and_validation(auth_manager):
     user = AuthUser(user_id=TEST_USER_ID, roles=[TEST_ROLE])
     tokens = auth_manager.generate_tokens(user)
     access_token = tokens['access'].token
-    
+
     validated_user = auth_manager.authenticate_with_jwt(access_token)
     assert validated_user is not None
     assert validated_user.user_id == TEST_USER_ID
@@ -113,10 +107,10 @@ def test_jwt_refresh(auth_manager):
     user = AuthUser(user_id=TEST_USER_ID, roles=[TEST_ROLE])
     tokens = auth_manager.generate_tokens(user)
     refresh_token = tokens['refresh'].token
-    
+
     new_access_token = auth_manager.refresh_access_token(refresh_token)
     assert new_access_token is not None
-    
+
     validated_user = auth_manager.authenticate_with_jwt(new_access_token.token)
     assert validated_user.user_id == TEST_USER_ID
 
@@ -125,7 +119,7 @@ def test_expired_token_validation(auth_manager):
     auth_manager.config.jwt_expiration_seconds = -1
     user = AuthUser(user_id=TEST_USER_ID, roles=[TEST_ROLE])
     tokens = auth_manager.generate_tokens(user)
-    
+
     # The authenticate_with_jwt method should return None for an invalid token
     assert auth_manager.authenticate_with_jwt(tokens['access'].token) is None
 
@@ -194,11 +188,11 @@ def test_client_create_http_endpoint(mock_client):
     """Test the client's create_http_endpoint method."""
     mock_response_data = {"endpoint_id": "ep-123", "status": "active"}
     mock_client._request.return_value.json.return_value = mock_response_data
-    
+
     create_req = HttpEndpointCreateRequest(
         path="/test", method=HttpMethod.POST, agent_id="agent-1"
     )
-    
+
     response = mock_client.create_http_endpoint(create_req)
     assert response.endpoint_id == "ep-123"
     mock_client._request.assert_called_with("POST", "endpoints", json=create_req.model_dump())

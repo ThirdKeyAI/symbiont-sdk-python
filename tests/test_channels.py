@@ -3,7 +3,6 @@
 from unittest.mock import Mock, patch
 
 from symbiont import Client
-from symbiont.config import ClientConfig
 from symbiont.channels import (
     AddIdentityMappingRequest,
     ChannelActionResponse,
@@ -18,6 +17,7 @@ from symbiont.channels import (
     RegisterChannelResponse,
     UpdateChannelRequest,
 )
+from symbiont.config import ClientConfig
 
 
 def _create_test_config():

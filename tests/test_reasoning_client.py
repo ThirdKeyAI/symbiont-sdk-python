@@ -8,13 +8,13 @@ from symbiont.reasoning import (
     CedarPolicy,
     CircuitBreakerStatus,
     JournalEntry,
+    LoopConfig,
     LoopDecision,
     LoopState,
     ProposedAction,
     ProposedActionType,
     RunReasoningLoopRequest,
     RunReasoningLoopResponse,
-    LoopConfig,
 )
 from symbiont.reasoning_client import ReasoningClient
 
