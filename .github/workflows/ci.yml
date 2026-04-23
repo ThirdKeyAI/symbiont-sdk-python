@@ -30,7 +30,7 @@ jobs:
 
     - name: Lint with ruff
       run: |
-        ruff check symbiont/
+        ruff check symbiont/ tests/
 
     - name: Security check with bandit
       run: |
