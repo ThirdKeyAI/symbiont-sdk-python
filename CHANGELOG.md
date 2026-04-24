@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-04-24
+
+Tracks Symbiont runtime v1.11.0.
+
+### Changed
+
+- **Version bump** to track the Symbiont runtime v1.11.0 release, which
+  introduces the `symbi shell` (Beta) interactive TUI, `symbi repl` shim
+  subcommand, `symbi init` Docker ergonomics (`--dir`, docker-compose
+  generator, auto-generated `SYMBIONT_MASTER_KEY`), cross-instance agent
+  messaging, `symbi-approval-relay` crate, and the `symbi schemapin` /
+  `symbi policy` CLI subcommands. The SDK's HTTP surface is
+  backward-compatible with v1.10.x; no client code changes required.
+
+### Fixed
+
+- Ruff findings in `tests/` cleaned up; lint enforced in CI so test-suite
+  style drift is caught on PRs.
+
+### Docs
+
+- Top-level README rewritten to align with the Symbiont main repo and
+  `symbiont.dev` voice.
+
 ## [1.10.0] - 2026-04-22
 
 ### Added
