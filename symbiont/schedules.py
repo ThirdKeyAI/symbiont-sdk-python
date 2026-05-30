@@ -229,9 +229,7 @@ class ScheduleClient:
         history = [ScheduleRunEntry(**entry) for entry in data.get("history", [])]
         return ScheduleHistoryResponse(job_id=data["job_id"], history=history)
 
-    def get_schedule_next_runs(
-        self, job_id: str, count: int = 10
-    ) -> NextRunsResponse:
+    def get_schedule_next_runs(self, job_id: str, count: int = 10) -> NextRunsResponse:
         """Get next N run times. ``GET /schedules/{id}/next-runs``"""
         data = self._request(
             "GET", f"/schedules/{job_id}/next-runs", params={"count": count}

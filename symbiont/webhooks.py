@@ -59,7 +59,7 @@ class HmacVerifier(SignatureVerifier):
 
         # Strip prefix if configured
         if self._prefix and sig_value.startswith(self._prefix):
-            sig_value = sig_value[len(self._prefix):]
+            sig_value = sig_value[len(self._prefix) :]
 
         # Compute expected HMAC
         expected = hmac.new(self._secret, body, hashlib.sha256).hexdigest()

@@ -20,7 +20,7 @@ class TestAgentModel:
             "model": "gpt-4",
             "temperature": 0.7,
             "top_p": 0.9,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         agent = Agent(**agent_data)
@@ -46,7 +46,7 @@ class TestAgentModel:
             "model": "gpt-3.5-turbo",
             "temperature": 0.0,
             "top_p": 0.1,
-            "max_tokens": 100
+            "max_tokens": 100,
         }
 
         agent = Agent(**agent_data)
@@ -68,7 +68,7 @@ class TestAgentModel:
             "model": "gpt-4",
             "temperature": 0.7,
             "top_p": 0.9,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -89,7 +89,7 @@ class TestAgentModel:
             "model": "gpt-4",
             "temperature": 0.7,
             "top_p": 0.9,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -110,7 +110,7 @@ class TestAgentModel:
             "model": "gpt-4",
             "temperature": 0.7,
             "top_p": 0.9,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -131,7 +131,7 @@ class TestAgentModel:
             "model": "gpt-4",
             "temperature": 0.7,
             "top_p": 0.9,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -152,7 +152,7 @@ class TestAgentModel:
             "model": "gpt-4",
             "temperature": 0.7,
             "top_p": 0.9,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -173,7 +173,7 @@ class TestAgentModel:
             "tools": ["tool1"],
             "temperature": 0.7,
             "top_p": 0.9,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -194,7 +194,7 @@ class TestAgentModel:
             "tools": ["tool1"],
             "model": "gpt-4",
             "top_p": 0.9,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -215,7 +215,7 @@ class TestAgentModel:
             "tools": ["tool1"],
             "model": "gpt-4",
             "temperature": 0.7,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -236,7 +236,7 @@ class TestAgentModel:
             "tools": ["tool1"],
             "model": "gpt-4",
             "temperature": 0.7,
-            "top_p": 0.9
+            "top_p": 0.9,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -261,7 +261,16 @@ class TestAgentModel:
         assert len(errors) == 8  # All fields except 'id' are missing
 
         missing_fields = {error["loc"][0] for error in errors}
-        expected_missing = {"name", "description", "system_prompt", "tools", "model", "temperature", "top_p", "max_tokens"}
+        expected_missing = {
+            "name",
+            "description",
+            "system_prompt",
+            "tools",
+            "model",
+            "temperature",
+            "top_p",
+            "max_tokens",
+        }
         assert missing_fields == expected_missing
 
     def test_agent_invalid_temperature_type_raises_validation_error(self):
@@ -275,7 +284,7 @@ class TestAgentModel:
             "model": "gpt-4",
             "temperature": "invalid",  # Should be float
             "top_p": 0.9,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -297,7 +306,7 @@ class TestAgentModel:
             "model": "gpt-4",
             "temperature": 0.7,
             "top_p": "invalid",  # Should be float
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -319,7 +328,7 @@ class TestAgentModel:
             "model": "gpt-4",
             "temperature": 0.7,
             "top_p": 0.9,
-            "max_tokens": "invalid"  # Should be int
+            "max_tokens": "invalid",  # Should be int
         }
 
         with pytest.raises(ValidationError) as exc_info:
@@ -341,7 +350,7 @@ class TestAgentModel:
             "model": "gpt-4",
             "temperature": 0.7,
             "top_p": 0.9,
-            "max_tokens": 2000
+            "max_tokens": 2000,
         }
 
         with pytest.raises(ValidationError) as exc_info:

@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 class AgentState(str, Enum):
     """Agent state enumeration."""
+
     IDLE = "idle"
     ACTIVE = "active"
     BUSY = "busy"
@@ -18,6 +19,7 @@ class AgentState(str, Enum):
 
 class SecretBackendType(str, Enum):
     """Secret backend type enumeration."""
+
     VAULT = "vault"
     ENCRYPTED_FILE = "encrypted_file"
     OS_KEYCHAIN = "os_keychain"
@@ -25,6 +27,7 @@ class SecretBackendType(str, Enum):
 
 class VaultAuthMethod(str, Enum):
     """Vault authentication method enumeration."""
+
     TOKEN = "token"  # nosec B105 - This is an enum value, not a password
     KUBERNETES = "kubernetes"
     AWS_IAM = "aws_iam"
@@ -33,6 +36,7 @@ class VaultAuthMethod(str, Enum):
 
 class McpConnectionStatus(str, Enum):
     """MCP connection status enumeration."""
+
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
@@ -41,6 +45,7 @@ class McpConnectionStatus(str, Enum):
 
 class KnowledgeSourceType(str, Enum):
     """Knowledge source type enumeration."""
+
     DOCUMENT = "document"
     CODE = "code"
     API_REFERENCE = "api_reference"
@@ -49,6 +54,7 @@ class KnowledgeSourceType(str, Enum):
 
 class ReviewStatus(str, Enum):
     """Review session status enumeration."""
+
     SUBMITTED = "submitted"
     PENDING_ANALYSIS = "pending_analysis"
     ANALYZING = "analyzing"
@@ -61,6 +67,7 @@ class ReviewStatus(str, Enum):
 
 class FindingSeverity(str, Enum):
     """Security finding severity levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -69,6 +76,7 @@ class FindingSeverity(str, Enum):
 
 class FindingCategory(str, Enum):
     """Security finding categories."""
+
     SCHEMA_INJECTION = "schema_injection"
     PRIVILEGE_ESCALATION = "privilege_escalation"
     DATA_EXPOSURE = "data_exposure"
@@ -79,6 +87,7 @@ class FindingCategory(str, Enum):
 # =============================================================================
 # Core Agent Models
 # =============================================================================
+
 
 class Agent(BaseModel):
     """Agent model for the Symbiont platform."""
@@ -96,6 +105,7 @@ class Agent(BaseModel):
 
 class ResourceUsage(BaseModel):
     """Resource usage information for agents."""
+
     memory_bytes: int = Field(..., description="Memory usage in bytes")
     cpu_percent: float = Field(..., description="CPU usage percentage")
     active_tasks: int = Field(..., description="Number of active tasks")
@@ -103,6 +113,7 @@ class ResourceUsage(BaseModel):
 
 class AgentStatusResponse(BaseModel):
     """Response structure for agent status queries."""
+
     agent_id: str
     state: AgentState
     last_activity: datetime
@@ -113,15 +124,22 @@ class AgentStatusResponse(BaseModel):
 # Workflow Models
 # =============================================================================
 
+
 class WorkflowExecutionRequest(BaseModel):
     """Request structure for workflow execution."""
+
     workflow_id: str = Field(..., description="The workflow definition or identifier")
-    parameters: Dict[str, Any] = Field(..., description="Parameters to pass to the workflow")
-    agent_id: Optional[str] = Field(None, description="Optional agent ID to execute the workflow")
+    parameters: Dict[str, Any] = Field(
+        ..., description="Parameters to pass to the workflow"
+    )
+    agent_id: Optional[str] = Field(
+        None, description="Optional agent ID to execute the workflow"
+    )
 
 
 class WorkflowExecutionResponse(BaseModel):
     """Response structure for workflow execution."""
+
     execution_id: str
     status: str
     started_at: datetime
@@ -132,14 +150,17 @@ class WorkflowExecutionResponse(BaseModel):
 # Tool Review API Models
 # =============================================================================
 
+
 class ToolProvider(BaseModel):
     """Tool provider information."""
+
     name: str
     public_key_url: Optional[str] = None
 
 
 class ToolSchema(BaseModel):
     """Tool schema definition."""
+
     type: str = "object"
     properties: Dict[str, Any]
     required: List[str] = []
@@ -147,6 +168,7 @@ class ToolSchema(BaseModel):
 
 class Tool(BaseModel):
     """Tool definition for review."""
+
     name: str
     description: str
     tool_schema: ToolSchema = Field(..., alias="schema")
@@ -155,6 +177,7 @@ class Tool(BaseModel):
 
 class SecurityFinding(BaseModel):
     """Security analysis finding."""
+
     finding_id: str
     severity: FindingSeverity
     category: FindingCategory
@@ -166,6 +189,7 @@ class SecurityFinding(BaseModel):
 
 class AnalysisResults(BaseModel):
     """Security analysis results."""
+
     analysis_id: str
     risk_score: int = Field(..., ge=0, le=100)
     findings: List[SecurityFinding]
@@ -175,6 +199,7 @@ class AnalysisResults(BaseModel):
 
 class ReviewSessionState(BaseModel):
     """Review session state information."""
+
     type: str
     analysis_id: Optional[str] = None
     analysis_completed_at: Optional[datetime] = None
@@ -185,6 +210,7 @@ class ReviewSessionState(BaseModel):
 
 class ReviewSession(BaseModel):
     """Tool review session."""
+
     review_id: str
     tool: Tool
     status: ReviewStatus
@@ -197,6 +223,7 @@ class ReviewSession(BaseModel):
 
 class ReviewSessionCreate(BaseModel):
     """Request to create a new review session."""
+
     tool: Tool
     submitted_by: str
     priority: str = "normal"
@@ -204,6 +231,7 @@ class ReviewSessionCreate(BaseModel):
 
 class ReviewSessionResponse(BaseModel):
     """Response when creating a review session."""
+
     review_id: str
     status: ReviewStatus
     submitted_at: datetime
@@ -212,12 +240,14 @@ class ReviewSessionResponse(BaseModel):
 
 class ReviewSessionList(BaseModel):
     """List of review sessions with pagination."""
+
     sessions: List[ReviewSession]
     pagination: Dict[str, Any]
 
 
 class HumanReviewDecision(BaseModel):
     """Human reviewer decision."""
+
     decision: str  # "approve" or "reject"
     comments: Optional[str] = None
     reviewer_id: str
@@ -227,8 +257,10 @@ class HumanReviewDecision(BaseModel):
 # System Models
 # =============================================================================
 
+
 class HealthResponse(BaseModel):
     """Health check response."""
+
     status: str
     uptime_seconds: int
     timestamp: datetime
@@ -237,6 +269,7 @@ class HealthResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Error response structure."""
+
     error: str
     code: str
     details: Optional[Dict[str, Any]] = None
@@ -244,6 +277,7 @@ class ErrorResponse(BaseModel):
 
 class PaginationInfo(BaseModel):
     """Pagination information."""
+
     page: int
     limit: int
     total: int
@@ -254,14 +288,17 @@ class PaginationInfo(BaseModel):
 # Signing Models
 # =============================================================================
 
+
 class SigningRequest(BaseModel):
     """Request to sign an approved tool."""
+
     review_id: str
     signing_key_id: str
 
 
 class SigningResponse(BaseModel):
     """Response from signing operation."""
+
     signature: str
     signed_at: datetime
     signer_id: str
@@ -270,6 +307,7 @@ class SigningResponse(BaseModel):
 
 class SignedTool(BaseModel):
     """Signed tool information."""
+
     tool: Tool
     signature: str
     signed_at: datetime
@@ -282,8 +320,10 @@ class SignedTool(BaseModel):
 # Secrets Management Models
 # =============================================================================
 
+
 class VaultConfig(BaseModel):
     """HashiCorp Vault configuration."""
+
     url: str
     auth_method: VaultAuthMethod
     token: Optional[str] = None
@@ -295,6 +335,7 @@ class VaultConfig(BaseModel):
 
 class SecretBackendConfig(BaseModel):
     """Secret backend configuration."""
+
     backend_type: SecretBackendType
     vault_config: Optional[VaultConfig] = None
     file_path: Optional[str] = None
@@ -303,6 +344,7 @@ class SecretBackendConfig(BaseModel):
 
 class SecretRequest(BaseModel):
     """Secret operation request."""
+
     agent_id: str
     secret_name: str
     secret_value: Optional[str] = None
@@ -311,6 +353,7 @@ class SecretRequest(BaseModel):
 
 class SecretResponse(BaseModel):
     """Secret operation response."""
+
     secret_name: str
     agent_id: str
     created_at: datetime
@@ -319,6 +362,7 @@ class SecretResponse(BaseModel):
 
 class SecretListResponse(BaseModel):
     """List secrets response."""
+
     secrets: List[str]
     agent_id: str
 
@@ -327,8 +371,10 @@ class SecretListResponse(BaseModel):
 # MCP Management Models
 # =============================================================================
 
+
 class McpServerConfig(BaseModel):
     """MCP server configuration."""
+
     name: str
     command: List[str]
     env: Dict[str, str] = {}
@@ -338,6 +384,7 @@ class McpServerConfig(BaseModel):
 
 class McpConnectionInfo(BaseModel):
     """MCP connection information."""
+
     server_name: str
     status: McpConnectionStatus
     pid: Optional[int] = None
@@ -349,6 +396,7 @@ class McpConnectionInfo(BaseModel):
 
 class McpToolInfo(BaseModel):
     """MCP tool information."""
+
     name: str
     description: str
     server_name: str
@@ -359,6 +407,7 @@ class McpToolInfo(BaseModel):
 
 class McpResourceInfo(BaseModel):
     """MCP resource information."""
+
     uri: str
     name: Optional[str] = None
     description: Optional[str] = None
@@ -370,8 +419,10 @@ class McpResourceInfo(BaseModel):
 # Vector Database & RAG Models
 # =============================================================================
 
+
 class VectorMetadata(BaseModel):
     """Vector metadata for knowledge items."""
+
     source: str
     source_type: KnowledgeSourceType
     chunk_index: Optional[int] = None
@@ -381,6 +432,7 @@ class VectorMetadata(BaseModel):
 
 class KnowledgeItem(BaseModel):
     """Knowledge item for vector database."""
+
     id: str
     content: str
     embedding: Optional[List[float]] = None
@@ -389,6 +441,7 @@ class KnowledgeItem(BaseModel):
 
 class VectorSearchRequest(BaseModel):
     """Vector similarity search request."""
+
     query: str
     agent_id: Optional[str] = None
     source_types: List[KnowledgeSourceType] = []
@@ -398,12 +451,14 @@ class VectorSearchRequest(BaseModel):
 
 class VectorSearchResult(BaseModel):
     """Vector search result."""
+
     item: KnowledgeItem
     similarity_score: float
 
 
 class VectorSearchResponse(BaseModel):
     """Vector search response."""
+
     results: List[VectorSearchResult]
     query: str
     total_results: int
@@ -411,6 +466,7 @@ class VectorSearchResponse(BaseModel):
 
 class ContextQuery(BaseModel):
     """Context query for RAG operations."""
+
     query: str
     agent_id: Optional[str] = None
     max_context_items: int = 5
@@ -419,6 +475,7 @@ class ContextQuery(BaseModel):
 
 class ContextResponse(BaseModel):
     """Context response from RAG system."""
+
     context_items: List[str]
     sources: List[str]
     query: str
@@ -429,8 +486,10 @@ class ContextResponse(BaseModel):
 # Agent DSL Models
 # =============================================================================
 
+
 class DslCompileRequest(BaseModel):
     """DSL compilation request."""
+
     dsl_content: str
     agent_name: str
     validate_only: bool = False
@@ -438,6 +497,7 @@ class DslCompileRequest(BaseModel):
 
 class DslCompileResponse(BaseModel):
     """DSL compilation response."""
+
     success: bool
     agent_id: Optional[str] = None
     errors: List[str] = []
@@ -447,6 +507,7 @@ class DslCompileResponse(BaseModel):
 
 class AgentDeployRequest(BaseModel):
     """Agent deployment request."""
+
     agent_id: str
     environment: str = "development"
     config_overrides: Dict[str, Any] = {}
@@ -454,6 +515,7 @@ class AgentDeployRequest(BaseModel):
 
 class AgentDeployResponse(BaseModel):
     """Agent deployment response."""
+
     deployment_id: str
     agent_id: str
     status: str
@@ -465,8 +527,10 @@ class AgentDeployResponse(BaseModel):
 # Enhanced Monitoring Models
 # =============================================================================
 
+
 class SystemMetrics(BaseModel):
     """Enhanced system metrics."""
+
     uptime_seconds: int
     memory_usage_bytes: int
     memory_usage_percent: float
@@ -482,6 +546,7 @@ class SystemMetrics(BaseModel):
 
 class AgentMetrics(BaseModel):
     """Agent-specific metrics."""
+
     agent_id: str
     tasks_completed: int
     tasks_failed: int
@@ -496,8 +561,10 @@ class AgentMetrics(BaseModel):
 # Configuration Models (Phase 1)
 # =============================================================================
 
+
 class ClientConfig(BaseModel):
     """Client configuration model."""
+
     api_key: Optional[str] = None
     base_url: str = "http://localhost:8080/api/v1"
     timeout: int = 30
@@ -509,6 +576,7 @@ class ClientConfig(BaseModel):
 
 class DatabaseConfig(BaseModel):
     """Database connection configuration."""
+
     host: str = "localhost"
     port: int = 5432
     database: str = "symbiont"
@@ -521,6 +589,7 @@ class DatabaseConfig(BaseModel):
 
 class AuthConfig(BaseModel):
     """Authentication configuration."""
+
     jwt_secret_key: Optional[str] = None
     jwt_algorithm: str = "HS256"
     jwt_expiration_seconds: int = 3600
@@ -533,6 +602,7 @@ class AuthConfig(BaseModel):
 
 class VectorConfig(BaseModel):
     """Vector database configuration."""
+
     provider: str = "qdrant"
     host: str = "localhost"
     port: int = 6333
@@ -545,6 +615,7 @@ class VectorConfig(BaseModel):
 
 class LoggingConfig(BaseModel):
     """Logging configuration."""
+
     level: str = "INFO"
     format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     file_path: Optional[str] = None
@@ -558,8 +629,10 @@ class LoggingConfig(BaseModel):
 # Authentication Models (Phase 1)
 # =============================================================================
 
+
 class JWTToken(BaseModel):
     """JWT token model."""
+
     token: str
     token_type: str
     expires_at: datetime
@@ -570,6 +643,7 @@ class JWTToken(BaseModel):
 
 class AuthResponse(BaseModel):
     """Authentication response."""
+
     user_id: str
     access_token: str
     refresh_token: Optional[str] = None
@@ -581,11 +655,13 @@ class AuthResponse(BaseModel):
 
 class TokenRefreshRequest(BaseModel):
     """Token refresh request."""
+
     refresh_token: str
 
 
 class TokenRefreshResponse(BaseModel):
     """Token refresh response."""
+
     access_token: str
     token_type: str = "Bearer"
     expires_in: int
@@ -593,6 +669,7 @@ class TokenRefreshResponse(BaseModel):
 
 class UserPermissions(BaseModel):
     """User permissions model."""
+
     user_id: str
     roles: List[str]
     permissions: List[str]
@@ -601,6 +678,7 @@ class UserPermissions(BaseModel):
 
 class RoleDefinition(BaseModel):
     """Role definition model."""
+
     name: str
     permissions: List[str]
     description: Optional[str] = None
@@ -611,8 +689,10 @@ class RoleDefinition(BaseModel):
 # HTTP Input Models
 # =============================================================================
 
+
 class RouteMatchType(str, Enum):
     """Route matching condition types."""
+
     PATH_PREFIX = "path_prefix"
     HEADER_EQUALS = "header_equals"
     JSON_FIELD_EQUALS = "json_field_equals"
@@ -620,6 +700,7 @@ class RouteMatchType(str, Enum):
 
 class AgentRoutingRule(BaseModel):
     """Rule to route HTTP requests to specific agents."""
+
     condition_type: RouteMatchType
     condition_value: str
     condition_target: Optional[str] = None  # For header/field name
@@ -628,6 +709,7 @@ class AgentRoutingRule(BaseModel):
 
 class HttpResponseControlConfig(BaseModel):
     """HTTP response control configuration."""
+
     default_status: int = 200
     agent_output_to_json: bool = True
     error_status: int = 500
@@ -636,7 +718,10 @@ class HttpResponseControlConfig(BaseModel):
 
 class HttpInputConfig(BaseModel):
     """HTTP input server configuration."""
-    bind_address: str = "0.0.0.0"  # nosec B104 - This is a configuration default, not actual binding
+
+    bind_address: str = (
+        "0.0.0.0"  # nosec B104 - This is a configuration default, not actual binding
+    )
     port: int = 8081
     path: str = "/webhook"
     agent_id: str
@@ -653,6 +738,7 @@ class HttpInputConfig(BaseModel):
 
 class HttpInputServerInfo(BaseModel):
     """HTTP input server status information."""
+
     server_id: str
     config: HttpInputConfig
     status: str  # "running", "stopped", "error"
@@ -664,17 +750,20 @@ class HttpInputServerInfo(BaseModel):
 
 class HttpInputCreateRequest(BaseModel):
     """Request to create/start HTTP input server."""
+
     config: HttpInputConfig
 
 
 class HttpInputUpdateRequest(BaseModel):
     """Request to update HTTP input server configuration."""
+
     server_id: str
     config: HttpInputConfig
 
 
 class WebhookTriggerRequest(BaseModel):
     """Request to manually trigger webhook for testing."""
+
     server_id: str
     payload: Dict[str, Any]
     headers: Dict[str, str] = {}
@@ -682,6 +771,7 @@ class WebhookTriggerRequest(BaseModel):
 
 class WebhookTriggerResponse(BaseModel):
     """Response from webhook trigger."""
+
     status: str
     response_code: int
     response_body: Dict[str, Any]
@@ -693,25 +783,42 @@ class WebhookTriggerResponse(BaseModel):
 # Phase 2 Memory System Models
 # =============================================================================
 
+
 class MemoryNode(BaseModel):
     """Individual memory item with metadata and content."""
+
     id: str = Field(..., description="Unique memory identifier")
     content: Dict[str, Any] = Field(..., description="Memory content")
-    memory_type: str = Field(..., description="Type of memory (conversation, fact, experience, context, metadata)")
-    memory_level: str = Field(..., description="Memory hierarchy level (short_term, long_term, episodic, semantic)")
+    memory_type: str = Field(
+        ...,
+        description="Type of memory (conversation, fact, experience, context, metadata)",
+    )
+    memory_level: str = Field(
+        ...,
+        description="Memory hierarchy level (short_term, long_term, episodic, semantic)",
+    )
     timestamp: datetime = Field(..., description="Memory creation timestamp")
     agent_id: str = Field(..., description="Agent that owns this memory")
-    conversation_id: Optional[str] = Field(None, description="Associated conversation ID")
+    conversation_id: Optional[str] = Field(
+        None, description="Associated conversation ID"
+    )
     parent_id: Optional[str] = Field(None, description="Parent memory ID")
-    children_ids: List[str] = Field(default_factory=list, description="Child memory IDs")
-    importance_score: float = Field(0.0, description="Memory importance score (0.0-1.0)")
+    children_ids: List[str] = Field(
+        default_factory=list, description="Child memory IDs"
+    )
+    importance_score: float = Field(
+        0.0, description="Memory importance score (0.0-1.0)"
+    )
     access_count: int = Field(0, description="Number of times memory was accessed")
     last_accessed: Optional[datetime] = Field(None, description="Last access timestamp")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
 
 
 class MemoryStoreRequest(BaseModel):
     """Request to store a memory."""
+
     content: Dict[str, Any] = Field(..., description="Memory content")
     memory_type: str = Field(..., description="Type of memory")
     memory_level: str = Field(..., description="Memory hierarchy level")
@@ -719,11 +826,14 @@ class MemoryStoreRequest(BaseModel):
     conversation_id: Optional[str] = Field(None, description="Conversation ID")
     importance_score: float = Field(0.0, description="Memory importance score")
     parent_id: Optional[str] = Field(None, description="Parent memory ID")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
 
 
 class MemoryResponse(BaseModel):
     """Response containing memory information."""
+
     memory: MemoryNode = Field(..., description="Memory node")
     success: bool = Field(True, description="Operation success status")
     message: Optional[str] = Field(None, description="Response message")
@@ -731,6 +841,7 @@ class MemoryResponse(BaseModel):
 
 class MemoryQuery(BaseModel):
     """Query for retrieving specific memories."""
+
     memory_id: Optional[str] = Field(None, description="Specific memory ID")
     agent_id: str = Field(..., description="Agent ID")
     conversation_id: Optional[str] = Field(None, description="Conversation ID")
@@ -742,37 +853,55 @@ class MemoryQuery(BaseModel):
 
 class MemorySearchRequest(BaseModel):
     """Request for searching memories."""
+
     agent_id: str = Field(..., description="Agent ID")
     query: Optional[Dict[str, Any]] = Field(None, description="Search query parameters")
-    memory_levels: Optional[List[str]] = Field(None, description="Memory levels to search")
+    memory_levels: Optional[List[str]] = Field(
+        None, description="Memory levels to search"
+    )
     content_contains: Optional[str] = Field(None, description="Content search string")
-    importance_threshold: Optional[float] = Field(None, description="Minimum importance score")
-    time_range: Optional[Dict[str, datetime]] = Field(None, description="Time range filter")
+    importance_threshold: Optional[float] = Field(
+        None, description="Minimum importance score"
+    )
+    time_range: Optional[Dict[str, datetime]] = Field(
+        None, description="Time range filter"
+    )
     limit: int = Field(50, description="Maximum number of results")
 
 
 class MemorySearchResponse(BaseModel):
     """Response containing search results."""
+
     memories: List[MemoryNode] = Field(..., description="Found memories")
     total_count: int = Field(..., description="Total number of matches")
-    search_time_ms: float = Field(..., description="Search execution time in milliseconds")
+    search_time_ms: float = Field(
+        ..., description="Search execution time in milliseconds"
+    )
     success: bool = Field(True, description="Search success status")
     message: Optional[str] = Field(None, description="Response message")
 
 
 class ConversationContext(BaseModel):
     """Conversation-specific memory context."""
+
     conversation_id: str = Field(..., description="Conversation identifier")
     agent_id: str = Field(..., description="Agent identifier")
     memories: List[MemoryNode] = Field(..., description="Conversation memories")
     context_summary: Optional[str] = Field(None, description="Context summary")
-    created_at: datetime = Field(default_factory=datetime.now, description="Context creation time")
-    updated_at: datetime = Field(default_factory=datetime.now, description="Last update time")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional context metadata")
+    created_at: datetime = Field(
+        default_factory=datetime.now, description="Context creation time"
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.now, description="Last update time"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional context metadata"
+    )
 
 
 class ConsolidationResponse(BaseModel):
     """Response from memory consolidation process."""
+
     agent_id: str = Field(..., description="Agent ID")
     promoted_count: int = Field(0, description="Number of memories promoted")
     pruned_count: int = Field(0, description="Number of memories pruned")
@@ -784,59 +913,89 @@ class ConsolidationResponse(BaseModel):
 
 class MemorySearchResult(BaseModel):
     """Individual memory search result with relevance scoring."""
+
     memory: MemoryNode = Field(..., description="Memory node")
-    relevance_score: float = Field(..., description="Relevance score for the search query")
+    relevance_score: float = Field(
+        ..., description="Relevance score for the search query"
+    )
     match_reason: str = Field(..., description="Reason for the match")
-    highlighted_content: Optional[Dict[str, Any]] = Field(None, description="Content with search highlights")
+    highlighted_content: Optional[Dict[str, Any]] = Field(
+        None, description="Content with search highlights"
+    )
 
 
 # =============================================================================
 # Phase 3 Qdrant Integration Models
 # =============================================================================
 
+
 class Vector(BaseModel):
     """Vector representation for Qdrant."""
+
     id: Union[str, int] = Field(..., description="Vector identifier")
     values: List[float] = Field(..., description="Vector values/embeddings")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Vector metadata")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Vector metadata"
+    )
 
 
 class Point(BaseModel):
     """Point representation for Qdrant."""
+
     id: Union[str, int] = Field(..., description="Point identifier")
-    vector: Union[List[float], Dict[str, List[float]]] = Field(..., description="Vector data")
-    payload: Dict[str, Any] = Field(default_factory=dict, description="Point payload/metadata")
+    vector: Union[List[float], Dict[str, List[float]]] = Field(
+        ..., description="Vector data"
+    )
+    payload: Dict[str, Any] = Field(
+        default_factory=dict, description="Point payload/metadata"
+    )
 
 
 class SearchQuery(BaseModel):
     """Search query for vector similarity search."""
+
     vector: List[float] = Field(..., description="Query vector")
     limit: int = Field(10, description="Maximum number of results")
-    score_threshold: Optional[float] = Field(None, description="Minimum similarity score")
-    filter: Optional[Dict[str, Any]] = Field(None, description="Payload filter conditions")
+    score_threshold: Optional[float] = Field(
+        None, description="Minimum similarity score"
+    )
+    filter: Optional[Dict[str, Any]] = Field(
+        None, description="Payload filter conditions"
+    )
     with_payload: bool = Field(True, description="Include payload in results")
     with_vector: bool = Field(False, description="Include vectors in results")
 
 
 class CollectionCreateRequest(BaseModel):
     """Request to create a new vector collection."""
+
     name: str = Field(..., description="Collection name")
     vector_size: int = Field(..., description="Vector dimension size")
-    distance: str = Field("Cosine", description="Distance metric (Cosine, Euclidean, Dot)")
+    distance: str = Field(
+        "Cosine", description="Distance metric (Cosine, Euclidean, Dot)"
+    )
     on_disk_payload: bool = Field(False, description="Store payload on disk")
-    hnsw_config: Optional[Dict[str, Any]] = Field(None, description="HNSW configuration")
-    optimizers_config: Optional[Dict[str, Any]] = Field(None, description="Optimizer configuration")
+    hnsw_config: Optional[Dict[str, Any]] = Field(
+        None, description="HNSW configuration"
+    )
+    optimizers_config: Optional[Dict[str, Any]] = Field(
+        None, description="Optimizer configuration"
+    )
 
 
 class CollectionResponse(BaseModel):
     """Response from collection operations."""
+
     collection_name: str = Field(..., description="Collection name")
     status: str = Field(..., description="Operation status")
-    result: Optional[Dict[str, Any]] = Field(None, description="Operation result details")
+    result: Optional[Dict[str, Any]] = Field(
+        None, description="Operation result details"
+    )
 
 
 class CollectionInfo(BaseModel):
     """Information about a vector collection."""
+
     collection_name: str = Field(..., description="Collection name")
     config: Dict[str, Any] = Field(..., description="Collection configuration")
     status: str = Field(..., description="Collection status")
@@ -847,6 +1006,7 @@ class CollectionInfo(BaseModel):
 
 class VectorUpsertRequest(BaseModel):
     """Request to upsert vectors into a collection."""
+
     collection_name: str = Field(..., description="Target collection name")
     points: List[Point] = Field(..., description="Points to upsert")
     wait: bool = Field(True, description="Wait for operation completion")
@@ -854,6 +1014,7 @@ class VectorUpsertRequest(BaseModel):
 
 class UpsertResponse(BaseModel):
     """Response from vector upsert operation."""
+
     collection_name: str = Field(..., description="Collection name")
     operation_id: Optional[str] = Field(None, description="Operation identifier")
     status: str = Field(..., description="Operation status")
@@ -862,23 +1023,34 @@ class UpsertResponse(BaseModel):
 
 class VectorPoint(BaseModel):
     """Vector point with metadata."""
+
     id: Union[str, int] = Field(..., description="Point identifier")
     vector: List[float] = Field(..., description="Vector values")
     payload: Dict[str, Any] = Field(default_factory=dict, description="Point metadata")
-    score: Optional[float] = Field(None, description="Similarity score (for search results)")
+    score: Optional[float] = Field(
+        None, description="Similarity score (for search results)"
+    )
 
 
 class EmbeddingRequest(BaseModel):
     """Request to generate embeddings."""
+
     texts: List[str] = Field(..., description="Texts to embed")
     model: str = Field("default", description="Embedding model to use")
     collection_name: Optional[str] = Field(None, description="Target collection")
-    metadata: Optional[List[Dict[str, Any]]] = Field(None, description="Metadata for each text")
+    metadata: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Metadata for each text"
+    )
+
+
 class EmbeddingResponse(BaseModel):
     """Response from embedding generation."""
+
     embeddings: List[List[float]] = Field(..., description="Generated embeddings")
     model: str = Field(..., description="Model used for embedding")
-    processing_time_ms: float = Field(..., description="Processing time in milliseconds")
+    processing_time_ms: float = Field(
+        ..., description="Processing time in milliseconds"
+    )
     token_count: Optional[int] = Field(None, description="Total token count processed")
 
 
@@ -886,8 +1058,10 @@ class EmbeddingResponse(BaseModel):
 # Phase 4 HTTP Endpoint Management Models
 # =============================================================================
 
+
 class HttpMethod(str, Enum):
     """HTTP method enumeration."""
+
     GET = "GET"
     POST = "POST"
     PUT = "PUT"
@@ -899,6 +1073,7 @@ class HttpMethod(str, Enum):
 
 class EndpointStatus(str, Enum):
     """HTTP endpoint status enumeration."""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     MAINTENANCE = "maintenance"
@@ -907,6 +1082,7 @@ class EndpointStatus(str, Enum):
 
 class HttpEndpointCreateRequest(BaseModel):
     """Request to create a new HTTP endpoint."""
+
     path: str = Field(..., description="Endpoint path")
     method: HttpMethod = Field(..., description="HTTP method")
     agent_id: str = Field(..., description="Agent to handle requests")
@@ -914,42 +1090,65 @@ class HttpEndpointCreateRequest(BaseModel):
     auth_required: bool = Field(True, description="Whether authentication is required")
     rate_limit: Optional[int] = Field(None, description="Rate limit per minute")
     timeout_seconds: int = Field(30, description="Request timeout in seconds")
-    middleware: List[str] = Field(default_factory=list, description="Middleware to apply")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional endpoint metadata")
+    middleware: List[str] = Field(
+        default_factory=list, description="Middleware to apply"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional endpoint metadata"
+    )
 
 
 class HttpEndpointUpdateRequest(BaseModel):
     """Request to update an existing HTTP endpoint."""
+
     endpoint_id: str = Field(..., description="Endpoint identifier")
     path: Optional[str] = Field(None, description="Endpoint path")
     method: Optional[HttpMethod] = Field(None, description="HTTP method")
     agent_id: Optional[str] = Field(None, description="Agent to handle requests")
     description: Optional[str] = Field(None, description="Endpoint description")
-    auth_required: Optional[bool] = Field(None, description="Whether authentication is required")
+    auth_required: Optional[bool] = Field(
+        None, description="Whether authentication is required"
+    )
     rate_limit: Optional[int] = Field(None, description="Rate limit per minute")
-    timeout_seconds: Optional[int] = Field(None, description="Request timeout in seconds")
+    timeout_seconds: Optional[int] = Field(
+        None, description="Request timeout in seconds"
+    )
     status: Optional[EndpointStatus] = Field(None, description="Endpoint status")
     middleware: Optional[List[str]] = Field(None, description="Middleware to apply")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional endpoint metadata")
+    metadata: Optional[Dict[str, Any]] = Field(
+        None, description="Additional endpoint metadata"
+    )
 
 
 class EndpointMetrics(BaseModel):
     """HTTP endpoint metrics."""
+
     endpoint_id: str = Field(..., description="Endpoint identifier")
     total_requests: int = Field(..., description="Total number of requests")
     successful_requests: int = Field(..., description="Number of successful requests")
     failed_requests: int = Field(..., description="Number of failed requests")
-    average_response_time_ms: float = Field(..., description="Average response time in milliseconds")
-    max_response_time_ms: float = Field(..., description="Maximum response time in milliseconds")
-    min_response_time_ms: float = Field(..., description="Minimum response time in milliseconds")
-    requests_per_minute: float = Field(..., description="Current requests per minute rate")
+    average_response_time_ms: float = Field(
+        ..., description="Average response time in milliseconds"
+    )
+    max_response_time_ms: float = Field(
+        ..., description="Maximum response time in milliseconds"
+    )
+    min_response_time_ms: float = Field(
+        ..., description="Minimum response time in milliseconds"
+    )
+    requests_per_minute: float = Field(
+        ..., description="Current requests per minute rate"
+    )
     error_rate_percent: float = Field(..., description="Error rate percentage")
-    last_request_at: Optional[datetime] = Field(None, description="Timestamp of last request")
+    last_request_at: Optional[datetime] = Field(
+        None, description="Timestamp of last request"
+    )
     uptime_seconds: int = Field(..., description="Endpoint uptime in seconds")
 
 
 class HttpEndpointInfo(BaseModel):
     """HTTP endpoint information."""
+
     endpoint_id: str = Field(..., description="Endpoint identifier")
     path: str = Field(..., description="Endpoint path")
     method: HttpMethod = Field(..., description="HTTP method")
@@ -959,20 +1158,27 @@ class HttpEndpointInfo(BaseModel):
     auth_required: bool = Field(..., description="Whether authentication is required")
     rate_limit: Optional[int] = Field(None, description="Rate limit per minute")
     timeout_seconds: int = Field(..., description="Request timeout in seconds")
-    middleware: List[str] = Field(default_factory=list, description="Applied middleware")
+    middleware: List[str] = Field(
+        default_factory=list, description="Applied middleware"
+    )
     created_at: datetime = Field(..., description="Endpoint creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
     created_by: str = Field(..., description="User who created the endpoint")
     metrics: Optional[EndpointMetrics] = Field(None, description="Endpoint metrics")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional endpoint metadata")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional endpoint metadata"
+    )
 
 
 class HttpEndpointResponse(BaseModel):
     """Response from HTTP endpoint operations."""
+
     endpoint_id: str = Field(..., description="Endpoint identifier")
     status: str = Field(..., description="Operation status")
     message: Optional[str] = Field(None, description="Operation message")
-    endpoint_info: Optional[HttpEndpointInfo] = Field(None, description="Endpoint information")
+    endpoint_info: Optional[HttpEndpointInfo] = Field(
+        None, description="Endpoint information"
+    )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
 
 
@@ -980,8 +1186,10 @@ class HttpEndpointResponse(BaseModel):
 # Webhook Verification Models
 # =============================================================================
 
+
 class WebhookProviderType(str, Enum):
     """Webhook provider type enumeration."""
+
     GITHUB = "github"
     STRIPE = "stripe"
     SLACK = "slack"
@@ -990,6 +1198,7 @@ class WebhookProviderType(str, Enum):
 
 class WebhookVerificationConfig(BaseModel):
     """Webhook verification configuration."""
+
     provider: WebhookProviderType = Field(..., description="Webhook provider type")
     secret: str = Field(..., description="Shared secret for verification")
     header_name: Optional[str] = Field(None, description="Custom header name override")
@@ -1008,6 +1217,7 @@ class WebhookVerificationConfig(BaseModel):
 
 class WebhookInvocationStatus(str, Enum):
     """Status of an HTTP Input invocation."""
+
     EXECUTION_STARTED = "execution_started"
     COMPLETED = "completed"
 
@@ -1021,6 +1231,7 @@ class WebhookInvocationRequest(BaseModel):
     4096 bytes by the runtime (truncated on a UTF-8 character boundary).
     Additional fields are permitted and passed through.
     """
+
     prompt: Optional[str] = Field(None, description="User prompt (preferred)")
     message: Optional[str] = Field(None, description="Alternative user message field")
     system_prompt: Optional[str] = Field(
@@ -1038,18 +1249,26 @@ class WebhookToolRun(BaseModel):
     ``output_preview`` is truncated on a UTF-8 character boundary to at most
     500 bytes by the runtime.
     """
+
     tool: str = Field(..., description="ToolClad manifest name")
-    input: Dict[str, Any] = Field(default_factory=dict, description="Tool call input arguments")
-    output_preview: str = Field(..., description="UTF-8 safe preview of tool output (<= 500 bytes)")
+    input: Dict[str, Any] = Field(
+        default_factory=dict, description="Tool call input arguments"
+    )
+    output_preview: str = Field(
+        ..., description="UTF-8 safe preview of tool output (<= 500 bytes)"
+    )
 
 
 class WebhookExecutionStartedResponse(BaseModel):
     """Response when the target agent was running and the request was
     dispatched on the runtime communication bus.
     """
+
     status: str = Field("execution_started", description="Always 'execution_started'")
     agent_id: str = Field(..., description="Target agent identifier")
-    message_id: str = Field(..., description="Runtime message identifier for the dispatch")
+    message_id: str = Field(
+        ..., description="Runtime message identifier for the dispatch"
+    )
     latency_ms: int = Field(..., description="Dispatch latency in milliseconds")
     timestamp: str = Field(..., description="RFC 3339 timestamp")
 
@@ -1058,6 +1277,7 @@ class WebhookCompletedResponse(BaseModel):
     """Response when the request was served by the on-demand LLM ORGA
     tool-calling loop.
     """
+
     status: str = Field("completed", description="Always 'completed'")
     agent_id: str = Field(..., description="Target agent identifier")
     response: str = Field(..., description="Final assistant text from the LLM")
@@ -1066,21 +1286,27 @@ class WebhookCompletedResponse(BaseModel):
         description="Per-tool execution previews from the ORGA loop",
     )
     model: str = Field(..., description="LLM model identifier used")
-    provider: str = Field(..., description="LLM provider name (e.g. 'anthropic', 'openai', 'openrouter')")
+    provider: str = Field(
+        ..., description="LLM provider name (e.g. 'anthropic', 'openai', 'openrouter')"
+    )
     latency_ms: int = Field(..., description="End-to-end loop latency in milliseconds")
     timestamp: str = Field(..., description="RFC 3339 timestamp")
 
 
 #: Discriminated union of all HTTP Input invocation responses.
-WebhookInvocationResponse = Union[WebhookExecutionStartedResponse, WebhookCompletedResponse]
+WebhookInvocationResponse = Union[
+    WebhookExecutionStartedResponse, WebhookCompletedResponse
+]
 
 
 # =============================================================================
 # Skills Models
 # =============================================================================
 
+
 class SignatureStatusType(str, Enum):
     """Skill signature verification status."""
+
     VERIFIED = "verified"
     PINNED = "pinned"
     UNSIGNED = "unsigned"
@@ -1090,6 +1316,7 @@ class SignatureStatusType(str, Enum):
 
 class ScanSeverityType(str, Enum):
     """Skill scan finding severity levels."""
+
     CRITICAL = "critical"
     WARNING = "warning"
     INFO = "info"
@@ -1097,6 +1324,7 @@ class ScanSeverityType(str, Enum):
 
 class ScanFindingModel(BaseModel):
     """Individual scan finding from skill scanning."""
+
     rule: str = Field(..., description="Rule that triggered the finding")
     severity: ScanSeverityType = Field(..., description="Finding severity")
     message: str = Field(..., description="Finding description")
@@ -1106,22 +1334,31 @@ class ScanFindingModel(BaseModel):
 
 class ScanResultModel(BaseModel):
     """Result of scanning a skill."""
+
     passed: bool = Field(..., description="Whether the scan passed")
-    findings: List[ScanFindingModel] = Field(default_factory=list, description="Scan findings")
+    findings: List[ScanFindingModel] = Field(
+        default_factory=list, description="Scan findings"
+    )
 
 
 class SkillMetadataModel(BaseModel):
     """Skill metadata from frontmatter."""
+
     name: str = Field(..., description="Skill name")
     description: Optional[str] = Field(None, description="Skill description")
-    raw_frontmatter: Dict[str, Any] = Field(default_factory=dict, description="Raw YAML frontmatter")
+    raw_frontmatter: Dict[str, Any] = Field(
+        default_factory=dict, description="Raw YAML frontmatter"
+    )
 
 
 class LoadedSkillModel(BaseModel):
     """A loaded skill with metadata and scan results."""
+
     name: str = Field(..., description="Skill name")
     path: str = Field(..., description="Skill directory path")
-    signature_status: SignatureStatusType = Field(..., description="Signature verification status")
+    signature_status: SignatureStatusType = Field(
+        ..., description="Signature verification status"
+    )
     content: str = Field(..., description="Skill content")
     metadata: Optional[SkillMetadataModel] = Field(None, description="Skill metadata")
     scan_result: Optional[ScanResultModel] = Field(None, description="Scan result")
@@ -1129,48 +1366,65 @@ class LoadedSkillModel(BaseModel):
 
 class SkillsConfig(BaseModel):
     """Skills configuration."""
-    load_paths: List[str] = Field(default_factory=list, description="Paths to search for skills")
+
+    load_paths: List[str] = Field(
+        default_factory=list, description="Paths to search for skills"
+    )
     require_signed: bool = Field(False, description="Require all skills to be signed")
-    allow_unsigned_from: List[str] = Field(default_factory=list, description="Paths that allow unsigned skills")
+    allow_unsigned_from: List[str] = Field(
+        default_factory=list, description="Paths that allow unsigned skills"
+    )
     auto_pin: bool = Field(False, description="Automatically pin new skill signatures")
     scan_enabled: bool = Field(True, description="Enable skill scanning")
-    custom_deny_patterns: List[str] = Field(default_factory=list, description="Custom deny regex patterns")
+    custom_deny_patterns: List[str] = Field(
+        default_factory=list, description="Custom deny regex patterns"
+    )
 
 
 # =============================================================================
 # Metrics Models
 # =============================================================================
 
+
 class OtlpProtocol(str, Enum):
     """OTLP exporter protocol."""
+
     GRPC = "grpc"
     HTTP = "http"
 
 
 class OtlpConfig(BaseModel):
     """OTLP exporter configuration."""
+
     endpoint: str = Field(..., description="OTLP endpoint URL")
     protocol: OtlpProtocol = Field(OtlpProtocol.GRPC, description="Transport protocol")
-    headers: Dict[str, str] = Field(default_factory=dict, description="Additional headers")
+    headers: Dict[str, str] = Field(
+        default_factory=dict, description="Additional headers"
+    )
     timeout_seconds: int = Field(10, description="Export timeout in seconds")
 
 
 class FileMetricsConfig(BaseModel):
     """File-based metrics exporter configuration."""
+
     path: str = Field(..., description="Output file path")
     compact: bool = Field(True, description="Use compact JSON format")
 
 
 class MetricsConfig(BaseModel):
     """Metrics collection and export configuration."""
+
     enabled: bool = Field(True, description="Enable metrics collection")
     export_interval_seconds: int = Field(60, description="Export interval in seconds")
     otlp: Optional[OtlpConfig] = Field(None, description="OTLP exporter configuration")
-    file: Optional[FileMetricsConfig] = Field(None, description="File exporter configuration")
+    file: Optional[FileMetricsConfig] = Field(
+        None, description="File exporter configuration"
+    )
 
 
 class SchedulerMetricsSnapshot(BaseModel):
     """Scheduler metrics snapshot."""
+
     jobs_total: int = Field(0, description="Total scheduled jobs")
     jobs_active: int = Field(0, description="Active jobs")
     jobs_paused: int = Field(0, description="Paused jobs")
@@ -1181,6 +1435,7 @@ class SchedulerMetricsSnapshot(BaseModel):
 
 class TaskManagerMetricsSnapshot(BaseModel):
     """Task manager metrics snapshot."""
+
     tasks_active: int = Field(0, description="Active tasks")
     tasks_queued: int = Field(0, description="Queued tasks")
     tasks_completed: int = Field(0, description="Completed tasks")
@@ -1189,6 +1444,7 @@ class TaskManagerMetricsSnapshot(BaseModel):
 
 class LoadBalancerMetricsSnapshot(BaseModel):
     """Load balancer metrics snapshot."""
+
     total_requests: int = Field(0, description="Total requests processed")
     active_connections: int = Field(0, description="Active connections")
     backends_healthy: int = Field(0, description="Healthy backends")
@@ -1197,6 +1453,7 @@ class LoadBalancerMetricsSnapshot(BaseModel):
 
 class SystemResourceMetricsSnapshot(BaseModel):
     """System resource metrics snapshot."""
+
     cpu_usage_percent: float = Field(0.0, description="CPU usage percentage")
     memory_usage_bytes: int = Field(0, description="Memory usage in bytes")
     memory_usage_percent: float = Field(0.0, description="Memory usage percentage")
@@ -1206,19 +1463,30 @@ class SystemResourceMetricsSnapshot(BaseModel):
 
 class MetricsSnapshot(BaseModel):
     """Complete metrics snapshot at a point in time."""
+
     timestamp: datetime = Field(..., description="Snapshot timestamp")
-    scheduler: Optional[SchedulerMetricsSnapshot] = Field(None, description="Scheduler metrics")
-    task_manager: Optional[TaskManagerMetricsSnapshot] = Field(None, description="Task manager metrics")
-    load_balancer: Optional[LoadBalancerMetricsSnapshot] = Field(None, description="Load balancer metrics")
-    system: Optional[SystemResourceMetricsSnapshot] = Field(None, description="System resource metrics")
+    scheduler: Optional[SchedulerMetricsSnapshot] = Field(
+        None, description="Scheduler metrics"
+    )
+    task_manager: Optional[TaskManagerMetricsSnapshot] = Field(
+        None, description="Task manager metrics"
+    )
+    load_balancer: Optional[LoadBalancerMetricsSnapshot] = Field(
+        None, description="Load balancer metrics"
+    )
+    system: Optional[SystemResourceMetricsSnapshot] = Field(
+        None, description="System resource metrics"
+    )
 
 
 # =============================================================================
 # ToolClad Models
 # =============================================================================
 
+
 class ToolManifestInfo(BaseModel):
     """Summary of a ToolClad manifest."""
+
     name: str
     version: str
     description: str
@@ -1231,6 +1499,7 @@ class ToolManifestInfo(BaseModel):
 
 class ToolValidationResult(BaseModel):
     """Result of manifest validation."""
+
     valid: bool
     errors: List[str] = []
     warnings: List[str] = []
@@ -1238,6 +1507,7 @@ class ToolValidationResult(BaseModel):
 
 class ToolTestResult(BaseModel):
     """Result of a tool dry-run."""
+
     command: str
     validations: List[str]
     cedar: Optional[str] = None
@@ -1246,6 +1516,7 @@ class ToolTestResult(BaseModel):
 
 class ToolExecutionResult(BaseModel):
     """Evidence envelope from tool execution."""
+
     status: str
     scan_id: str
     tool: str
@@ -1262,8 +1533,10 @@ class ToolExecutionResult(BaseModel):
 # Communication Policy Models
 # =============================================================================
 
+
 class CommunicationRule(BaseModel):
     """Inter-agent communication policy rule."""
+
     id: Optional[str] = None
     from_agent: str
     to_agent: str
@@ -1276,7 +1549,7 @@ class CommunicationRule(BaseModel):
 
 class CommunicationEvaluation(BaseModel):
     """Result of a communication policy evaluation."""
+
     allowed: bool
     rule: Optional[CommunicationRule] = None
     reason: str = ""
-

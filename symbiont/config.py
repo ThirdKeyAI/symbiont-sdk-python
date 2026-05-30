@@ -13,6 +13,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class ConfigSource(str, Enum):
     """Configuration source enumeration."""
+
     ENVIRONMENT = "environment"
     FILE = "file"
     VAULT = "vault"
@@ -21,6 +22,7 @@ class ConfigSource(str, Enum):
 
 class DatabaseConfig(BaseSettings):
     """Database connection configuration."""
+
     model_config = SettingsConfigDict(env_prefix="SYMBIONT_DB_")
     host: str = "localhost"
     port: int = 5432
@@ -34,6 +36,7 @@ class DatabaseConfig(BaseSettings):
 
 class AuthConfig(BaseSettings):
     """Authentication configuration."""
+
     model_config = SettingsConfigDict(env_prefix="SYMBIONT_AUTH_", case_sensitive=False)
     jwt_secret_key: Optional[str] = None
     jwt_algorithm: str = "HS256"
@@ -47,6 +50,7 @@ class AuthConfig(BaseSettings):
 
 class VectorConfig(BaseSettings):
     """Vector database configuration."""
+
     model_config = SettingsConfigDict(env_prefix="SYMBIONT_VECTOR_")
     provider: str = "qdrant"
     host: str = "localhost"
@@ -60,6 +64,7 @@ class VectorConfig(BaseSettings):
 
 class LoggingConfig(BaseSettings):
     """Logging configuration."""
+
     model_config = SettingsConfigDict(env_prefix="SYMBIONT_LOGGING_")
     level: str = "INFO"
     format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -94,15 +99,15 @@ class ClientConfig(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
-        env_prefix="SYMBIONT_"
+        env_prefix="SYMBIONT_",
     )
 
-    @field_validator('base_url')
+    @field_validator("base_url")
     @classmethod
     def validate_base_url(cls, v):
         """Validate and normalize base URL."""
         if v:
-            return v.rstrip('/')
+            return v.rstrip("/")
         return v
 
 
@@ -119,9 +124,9 @@ class ConfigManager:
         self._config_path = Path(config_path) if config_path else None
         self._sources: Dict[str, ConfigSource] = {}
 
-    def load(self,
-             config_path: Optional[Union[str, Path]] = None,
-             force_reload: bool = False) -> ClientConfig:
+    def load(
+        self, config_path: Optional[Union[str, Path]] = None, force_reload: bool = False
+    ) -> ClientConfig:
         """Load configuration from various sources.
 
         Args:
@@ -149,9 +154,13 @@ class ConfigManager:
             config_file_path = Path(config_file_path)
             if config_file_path.exists():
                 config_dict.update(self._load_from_file(config_file_path))
-                self._sources.update(dict.fromkeys(config_dict.keys(), ConfigSource.FILE))
+                self._sources.update(
+                    dict.fromkeys(config_dict.keys(), ConfigSource.FILE)
+                )
             elif config_path:  # Only raise if explicitly provided
-                raise FileNotFoundError(f"Configuration file not found: {config_file_path}")
+                raise FileNotFoundError(
+                    f"Configuration file not found: {config_file_path}"
+                )
 
         # Create configuration with file data + environment overrides
         self._config = ClientConfig(**config_dict)
@@ -179,13 +188,15 @@ class ConfigManager:
             ValueError: If file format is unsupported or invalid
         """
         try:
-            with open(file_path, encoding='utf-8') as f:
-                if file_path.suffix.lower() in ['.yml', '.yaml']:
+            with open(file_path, encoding="utf-8") as f:
+                if file_path.suffix.lower() in [".yml", ".yaml"]:
                     return yaml.safe_load(f) or {}
-                elif file_path.suffix.lower() == '.json':
+                elif file_path.suffix.lower() == ".json":
                     return json.load(f) or {}
                 else:
-                    raise ValueError(f"Unsupported config file format: {file_path.suffix}")
+                    raise ValueError(
+                        f"Unsupported config file format: {file_path.suffix}"
+                    )
         except yaml.YAMLError as e:
             raise ValueError(f"Invalid YAML in config file: {e}") from e
         except json.JSONDecodeError as e:
@@ -238,7 +249,9 @@ class ConfigManager:
         #     errors['api_key'] = "API key is required for authentication"
 
         if config.auth.jwt_secret_key is None and config.auth.enable_refresh_tokens:
-            errors['auth.jwt_secret_key'] = "JWT secret key required when refresh tokens enabled"  # nosec B105 - This is an error message, not a password
+            errors["auth.jwt_secret_key"] = (
+                "JWT secret key required when refresh tokens enabled"  # nosec B105 - This is an error message, not a password
+            )
 
         return errors
 
@@ -252,9 +265,12 @@ class ConfigManager:
             raise RuntimeError("Configuration not loaded. Call load() first.")
         return self._config.model_dump()
 
-    def save_to_file(self, file_path: Union[str, Path],
-                     format: str = "yaml",
-                     exclude_secrets: bool = True) -> None:
+    def save_to_file(
+        self,
+        file_path: Union[str, Path],
+        format: str = "yaml",
+        exclude_secrets: bool = True,
+    ) -> None:
         """Save current configuration to file.
 
         Args:
@@ -270,9 +286,9 @@ class ConfigManager:
         if exclude_secrets:
             # Remove sensitive fields
             sensitive_paths = [
-                ['api_key'],
-                ['auth', 'jwt_secret_key'],
-                ['database', 'password']
+                ["api_key"],
+                ["auth", "jwt_secret_key"],
+                ["database", "password"],
             ]
 
             for path in sensitive_paths:
@@ -288,10 +304,10 @@ class ConfigManager:
 
         file_path = Path(file_path)
 
-        with open(file_path, 'w', encoding='utf-8') as f:
-            if format.lower() == 'yaml':
+        with open(file_path, "w", encoding="utf-8") as f:
+            if format.lower() == "yaml":
                 yaml.safe_dump(config_dict, f, default_flow_style=False, indent=2)
-            elif format.lower() == 'json':
+            elif format.lower() == "json":
                 json.dump(config_dict, f, indent=2, default=str)
             else:
                 raise ValueError(f"Unsupported format: {format}")
