@@ -207,9 +207,7 @@ class AgentPinClient:
             VerificationResult with validation details
         """
         store = pin_store if pin_store is not None else self._pin_store
-        return verify_credential_with_bundle(
-            jwt, bundle, store, audience, config
-        )
+        return verify_credential_with_bundle(jwt, bundle, store, audience, config)
 
     # =========================================================================
     # Discovery

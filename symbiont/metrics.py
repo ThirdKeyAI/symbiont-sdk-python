@@ -329,18 +329,14 @@ class MetricsClient:
         response = self._client._request(method, path, json=json, params=params)
         return response.json()
 
-    def get_metrics_snapshot(self) -> Dict[str, Any]:
-        """Get the current metrics snapshot. ``GET /metrics/snapshot``"""
-        return self._request("GET", "/metrics/snapshot")
+    def get_metrics(self) -> Dict[str, Any]:
+        """Get runtime metrics. ``GET /api/v1/metrics``.
 
-    def get_scheduler_metrics(self) -> Dict[str, Any]:
-        """Get scheduler-specific metrics. ``GET /metrics/scheduler``"""
-        return self._request("GET", "/metrics/scheduler")
-
-    def get_system_metrics(self) -> Dict[str, Any]:
-        """Get system resource metrics. ``GET /metrics/system``"""
-        return self._request("GET", "/metrics/system")
-
-    def export_metrics(self) -> Dict[str, Any]:
-        """Trigger a metrics export. ``POST /metrics/export``"""
-        return self._request("POST", "/metrics/export")
+        This is the only metrics endpoint the OSS runtime exposes. The
+        previous per-facet methods (snapshot/scheduler/system/export)
+        targeted endpoints that the OSS runtime does not serve and have
+        been removed; use the client-side exporters in this module
+        (``FileMetricsExporter``/``OtlpExporter``) to persist or ship the
+        returned data.
+        """
+        return self._request("GET", "metrics")

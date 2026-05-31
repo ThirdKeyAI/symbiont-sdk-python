@@ -62,7 +62,9 @@ class TestSkillScanner:
         assert any(f.rule == "chmod-777" for f in findings)
 
     def test_clean_content(self, scanner):
-        findings = scanner.scan_content("This is perfectly safe content.\nNothing bad here.")
+        findings = scanner.scan_content(
+            "This is perfectly safe content.\nNothing bad here."
+        )
         assert findings == []
 
     def test_custom_rule(self):

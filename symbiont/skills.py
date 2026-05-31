@@ -212,8 +212,16 @@ class SkillScanner:
         all_findings: List[ScanFinding] = []
 
         text_extensions = {
-            ".md", ".txt", ".py", ".js", ".ts", ".sh",
-            ".yaml", ".yml", ".json", ".toml",
+            ".md",
+            ".txt",
+            ".py",
+            ".js",
+            ".ts",
+            ".sh",
+            ".yaml",
+            ".yml",
+            ".json",
+            ".toml",
         }
 
         for root, _dirs, files in os.walk(skill_dir):
@@ -231,9 +239,7 @@ class SkillScanner:
                 except OSError:
                     pass
 
-        has_critical = any(
-            f.severity == ScanSeverity.CRITICAL for f in all_findings
-        )
+        has_critical = any(f.severity == ScanSeverity.CRITICAL for f in all_findings)
         return ScanResult(passed=not has_critical, findings=all_findings)
 
 
@@ -269,17 +275,19 @@ class SkillLoader:
     def __init__(self, config: SkillLoaderConfig) -> None:
         self._config = config
         self._scanner = SkillScanner(
-            custom_rules=[
-                ScanRule(
-                    name=f"custom-deny-{i}",
-                    pattern=p,
-                    severity=ScanSeverity.CRITICAL,
-                    message=f"Custom deny pattern matched: {p}",
-                )
-                for i, p in enumerate(config.custom_deny_patterns)
-            ]
-            if config.custom_deny_patterns
-            else None
+            custom_rules=(
+                [
+                    ScanRule(
+                        name=f"custom-deny-{i}",
+                        pattern=p,
+                        severity=ScanSeverity.CRITICAL,
+                        message=f"Custom deny pattern matched: {p}",
+                    )
+                    for i, p in enumerate(config.custom_deny_patterns)
+                ]
+                if config.custom_deny_patterns
+                else None
+            )
         )
         self._schemapin_available = False
         try:

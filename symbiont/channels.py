@@ -232,25 +232,17 @@ class ChannelClient:
         }
         if request.email is not None:
             payload["email"] = request.email
-        data = self._request(
-            "POST", f"/channels/{channel_id}/mappings", json=payload
-        )
+        data = self._request("POST", f"/channels/{channel_id}/mappings", json=payload)
         return IdentityMappingEntry(**data)
 
     def remove_mapping(self, channel_id: str, user_id: str) -> None:
         """Remove an identity mapping. ``DELETE /channels/{id}/mappings/{user_id}``"""
-        self._client._request(
-            "DELETE", f"/channels/{channel_id}/mappings/{user_id}"
-        )
+        self._client._request("DELETE", f"/channels/{channel_id}/mappings/{user_id}")
 
-    def query_audit(
-        self, channel_id: str, limit: int = 50
-    ) -> ChannelAuditResponse:
+    def query_audit(self, channel_id: str, limit: int = 50) -> ChannelAuditResponse:
         """Get audit log entries. ``GET /channels/{id}/audit``"""
         data = self._request(
             "GET", f"/channels/{channel_id}/audit", params={"limit": limit}
         )
         entries = [ChannelAuditEntry(**entry) for entry in data.get("entries", [])]
-        return ChannelAuditResponse(
-            channel_id=data["channel_id"], entries=entries
-        )
+        return ChannelAuditResponse(channel_id=data["channel_id"], entries=entries)

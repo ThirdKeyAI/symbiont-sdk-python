@@ -14,6 +14,7 @@ from .config import AuthConfig
 
 class AuthMethod(str, Enum):
     """Authentication method enumeration."""
+
     API_KEY = "api_key"
     JWT = "jwt"
     OAUTH2 = "oauth2"
@@ -22,6 +23,7 @@ class AuthMethod(str, Enum):
 
 class TokenType(str, Enum):
     """Token type enumeration."""
+
     ACCESS = "access"
     REFRESH = "refresh"
     API_KEY = "api_key"
@@ -29,6 +31,7 @@ class TokenType(str, Enum):
 
 class Permission(str, Enum):
     """Permission enumeration."""
+
     READ = "read"
     WRITE = "write"
     DELETE = "delete"
@@ -38,6 +41,7 @@ class Permission(str, Enum):
 
 class Role(BaseModel):
     """Role definition with permissions."""
+
     name: str
     permissions: Set[Permission]
     description: Optional[str] = None
@@ -46,6 +50,7 @@ class Role(BaseModel):
 
 class AuthToken(BaseModel):
     """Authentication token model."""
+
     token: str
     token_type: TokenType
     expires_at: datetime
@@ -58,6 +63,7 @@ class AuthToken(BaseModel):
 
 class AuthUser(BaseModel):
     """Authenticated user model."""
+
     user_id: str
     username: Optional[str] = None
     email: Optional[str] = None
@@ -115,12 +121,14 @@ class JWTHandler:
         if not self.config.jwt_algorithm:
             raise ValueError("JWT algorithm is required")
 
-    def generate_token(self,
-                      user_id: str,
-                      roles: List[str] = None,
-                      permissions: Set[Permission] = None,
-                      token_type: TokenType = TokenType.ACCESS,
-                      expires_in: Optional[int] = None) -> AuthToken:
+    def generate_token(
+        self,
+        user_id: str,
+        roles: List[str] = None,
+        permissions: Set[Permission] = None,
+        token_type: TokenType = TokenType.ACCESS,
+        expires_in: Optional[int] = None,
+    ) -> AuthToken:
         """Generate a JWT token.
 
         Args:
@@ -148,21 +156,19 @@ class JWTHandler:
 
         # Create payload
         payload = {
-            'sub': user_id,
-            'iat': int(now.timestamp()),
-            'exp': int(expires_at.timestamp()),
-            'iss': self.config.token_issuer,
-            'aud': self.config.token_audience,
-            'type': token_type.value,
-            'roles': roles,
-            'permissions': [p.value for p in permissions] if permissions else []
+            "sub": user_id,
+            "iat": int(now.timestamp()),
+            "exp": int(expires_at.timestamp()),
+            "iss": self.config.token_issuer,
+            "aud": self.config.token_audience,
+            "type": token_type.value,
+            "roles": roles,
+            "permissions": [p.value for p in permissions] if permissions else [],
         }
 
         # Generate token
         token = jwt.encode(
-            payload,
-            self.config.jwt_secret_key,
-            algorithm=self.config.jwt_algorithm
+            payload, self.config.jwt_secret_key, algorithm=self.config.jwt_algorithm
         )
 
         return AuthToken(
@@ -172,7 +178,7 @@ class JWTHandler:
             issued_at=now,
             user_id=user_id,
             roles=roles,
-            permissions=permissions
+            permissions=permissions,
         )
 
     def decode_token(self, token: str) -> Optional[Dict[str, Any]]:
@@ -190,7 +196,7 @@ class JWTHandler:
                 self.config.jwt_secret_key,
                 algorithms=[self.config.jwt_algorithm],
                 issuer=self.config.token_issuer,
-                audience=self.config.token_audience
+                audience=self.config.token_audience,
             )
             return payload
         except jwt.InvalidTokenError:
@@ -209,16 +215,16 @@ class JWTHandler:
             return None
 
         payload = self.decode_token(refresh_token)
-        if not payload or payload.get('type') != TokenType.REFRESH.value:
+        if not payload or payload.get("type") != TokenType.REFRESH.value:
             return None
 
         # Generate new access token
-        permissions = {Permission(p) for p in payload.get('permissions', [])}
+        permissions = {Permission(p) for p in payload.get("permissions", [])}
         return self.generate_token(
-            user_id=payload['sub'],
-            roles=payload.get('roles', []),
+            user_id=payload["sub"],
+            roles=payload.get("roles", []),
             permissions=permissions,
-            token_type=TokenType.ACCESS
+            token_type=TokenType.ACCESS,
         )
 
 
@@ -251,13 +257,13 @@ class TokenValidator:
             return None
 
         # Convert permissions back to enum
-        permissions = {Permission(p) for p in payload.get('permissions', [])}
+        permissions = {Permission(p) for p in payload.get("permissions", [])}
 
         return AuthUser(
-            user_id=payload['sub'],
-            roles=payload.get('roles', []),
+            user_id=payload["sub"],
+            roles=payload.get("roles", []),
             permissions=permissions,
-            last_login=datetime.now(timezone.utc)
+            last_login=datetime.now(timezone.utc),
         )
 
     def blacklist_token(self, token: str) -> None:
@@ -293,19 +299,25 @@ class RoleManager:
         default_roles = [
             Role(
                 name="admin",
-                permissions={Permission.READ, Permission.WRITE, Permission.DELETE, Permission.ADMIN, Permission.EXECUTE},
-                description="Full system access"
+                permissions={
+                    Permission.READ,
+                    Permission.WRITE,
+                    Permission.DELETE,
+                    Permission.ADMIN,
+                    Permission.EXECUTE,
+                },
+                description="Full system access",
             ),
             Role(
                 name="user",
                 permissions={Permission.READ, Permission.WRITE, Permission.EXECUTE},
-                description="Standard user access"
+                description="Standard user access",
             ),
             Role(
                 name="readonly",
                 permissions={Permission.READ},
-                description="Read-only access"
-            )
+                description="Read-only access",
+            ),
         ]
 
         for role in default_roles:
@@ -346,7 +358,9 @@ class RoleManager:
                 permissions.update(role.permissions)
         return permissions
 
-    def has_permission(self, user_roles: List[str], required_permission: Permission) -> bool:
+    def has_permission(
+        self, user_roles: List[str], required_permission: Permission
+    ) -> bool:
         """Check if user has required permission.
 
         Args:
@@ -357,7 +371,10 @@ class RoleManager:
             True if user has permission, False otherwise
         """
         user_permissions = self.get_permissions_for_roles(user_roles)
-        return required_permission in user_permissions or Permission.ADMIN in user_permissions
+        return (
+            required_permission in user_permissions
+            or Permission.ADMIN in user_permissions
+        )
 
 
 class AuthManager:
@@ -401,7 +418,7 @@ class AuthManager:
                 user_id=user_id,
                 roles=["user"],
                 permissions=self.role_manager.get_permissions_for_roles(["user"]),
-                last_login=datetime.now(timezone.utc)
+                last_login=datetime.now(timezone.utc),
             )
         return None
 
@@ -416,7 +433,9 @@ class AuthManager:
         """
         return self.token_validator.validate_token(token)
 
-    def authenticate(self, method: AuthMethod, credentials: Dict[str, Any]) -> Optional[AuthUser]:
+    def authenticate(
+        self, method: AuthMethod, credentials: Dict[str, Any]
+    ) -> Optional[AuthUser]:
         """Authenticate user with specified method and credentials.
 
         Args:
@@ -427,10 +446,10 @@ class AuthManager:
             AuthUser if authentication successful, None otherwise
         """
         if method == AuthMethod.API_KEY:
-            api_key = credentials.get('api_key')
+            api_key = credentials.get("api_key")
             return self.authenticate_with_api_key(api_key)
         elif method == AuthMethod.JWT:
-            token = credentials.get('token')
+            token = credentials.get("token")
             return self.authenticate_with_jwt(token)
         else:
             # Try registered providers
@@ -457,9 +476,9 @@ class AuthManager:
             user_id=user.user_id,
             roles=user.roles,
             permissions=user.permissions,
-            token_type=TokenType.ACCESS
+            token_type=TokenType.ACCESS,
         )
-        tokens['access'] = access_token
+        tokens["access"] = access_token
 
         # Generate refresh token if enabled
         if self.config.enable_refresh_tokens:
@@ -467,9 +486,9 @@ class AuthManager:
                 user_id=user.user_id,
                 roles=user.roles,
                 permissions=user.permissions,
-                token_type=TokenType.REFRESH
+                token_type=TokenType.REFRESH,
             )
-            tokens['refresh'] = refresh_token
+            tokens["refresh"] = refresh_token
 
         return tokens
 
@@ -484,7 +503,9 @@ class AuthManager:
         """
         return self.jwt_handler.refresh_token(refresh_token)
 
-    def validate_permissions(self, user: AuthUser, action: str, resource: str = None) -> bool:
+    def validate_permissions(
+        self, user: AuthUser, action: str, resource: str = None
+    ) -> bool:
         """Validate if user has permission for a specific action.
 
         Args:

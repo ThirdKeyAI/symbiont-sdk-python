@@ -33,7 +33,9 @@ class APIError(SymbiontError):
 class AuthenticationError(SymbiontError):
     """Authentication error for 401 Unauthorized responses."""
 
-    def __init__(self, message: str = "Authentication failed", response_text: str = None):
+    def __init__(
+        self, message: str = "Authentication failed", response_text: str = None
+    ):
         """Initialize the AuthenticationError.
 
         Args:
@@ -76,6 +78,7 @@ class RateLimitError(SymbiontError):
 # Phase 1 New Exception Classes
 # =============================================================================
 
+
 class ConfigurationError(SymbiontError):
     """Configuration-related errors."""
 
@@ -93,7 +96,11 @@ class ConfigurationError(SymbiontError):
 class AuthenticationExpiredError(AuthenticationError):
     """Authentication expired error for expired tokens."""
 
-    def __init__(self, message: str = "Authentication token has expired", response_text: str = None):
+    def __init__(
+        self,
+        message: str = "Authentication token has expired",
+        response_text: str = None,
+    ):
         """Initialize the AuthenticationExpiredError.
 
         Args:
@@ -106,7 +113,11 @@ class AuthenticationExpiredError(AuthenticationError):
 class TokenRefreshError(AuthenticationError):
     """Token refresh error for failed token refresh attempts."""
 
-    def __init__(self, message: str = "Failed to refresh authentication token", response_text: str = None):
+    def __init__(
+        self,
+        message: str = "Failed to refresh authentication token",
+        response_text: str = None,
+    ):
         """Initialize the TokenRefreshError.
 
         Args:
@@ -119,7 +130,11 @@ class TokenRefreshError(AuthenticationError):
 class PermissionDeniedError(SymbiontError):
     """Permission denied error for insufficient privileges."""
 
-    def __init__(self, message: str = "Insufficient permissions for this operation", required_permission: str = None):
+    def __init__(
+        self,
+        message: str = "Insufficient permissions for this operation",
+        required_permission: str = None,
+    ):
         """Initialize the PermissionDeniedError.
 
         Args:
@@ -134,8 +149,10 @@ class PermissionDeniedError(SymbiontError):
 # Phase 2 Memory System Exception Classes
 # =============================================================================
 
+
 class MemoryError(SymbiontError):
     """Base exception for memory system errors."""
+
     pass
 
 
@@ -171,8 +188,10 @@ class MemoryRetrievalError(MemoryError):
 # Phase 3 Vector Database Exception Classes
 # =============================================================================
 
+
 class VectorDatabaseError(SymbiontError):
     """Base exception for vector database errors."""
+
     pass
 
 
@@ -193,7 +212,9 @@ class QdrantConnectionError(VectorDatabaseError):
 class CollectionNotFoundError(VectorDatabaseError):
     """Raised when a vector collection is not found."""
 
-    def __init__(self, message: str = "Vector collection not found", collection_name: str = None):
+    def __init__(
+        self, message: str = "Vector collection not found", collection_name: str = None
+    ):
         """Initialize the CollectionNotFoundError.
 
         Args:
@@ -222,15 +243,19 @@ class EmbeddingError(SymbiontError):
 # Phase 4 HTTP Endpoint Management Exception Classes
 # =============================================================================
 
+
 class EndpointError(SymbiontError):
     """Base exception for HTTP endpoint management errors."""
+
     pass
 
 
 class EndpointNotFoundError(EndpointError):
     """Raised when an HTTP endpoint is not found."""
 
-    def __init__(self, message: str = "HTTP endpoint not found", endpoint_id: str = None):
+    def __init__(
+        self, message: str = "HTTP endpoint not found", endpoint_id: str = None
+    ):
         """Initialize the EndpointNotFoundError.
 
         Args:
@@ -244,7 +269,12 @@ class EndpointNotFoundError(EndpointError):
 class EndpointConflictError(EndpointError):
     """Raised when an HTTP endpoint creation conflicts with existing endpoints."""
 
-    def __init__(self, message: str = "HTTP endpoint conflict", path: str = None, method: str = None):
+    def __init__(
+        self,
+        message: str = "HTTP endpoint conflict",
+        path: str = None,
+        method: str = None,
+    ):
         """Initialize the EndpointConflictError.
 
         Args:
@@ -260,7 +290,9 @@ class EndpointConflictError(EndpointError):
 class EndpointConfigurationError(EndpointError):
     """Raised when HTTP endpoint configuration is invalid."""
 
-    def __init__(self, message: str = "Invalid endpoint configuration", config_field: str = None):
+    def __init__(
+        self, message: str = "Invalid endpoint configuration", config_field: str = None
+    ):
         """Initialize the EndpointConfigurationError.
 
         Args:
@@ -274,7 +306,9 @@ class EndpointConfigurationError(EndpointError):
 class EndpointRateLimitError(EndpointError):
     """Raised when an HTTP endpoint rate limit is exceeded."""
 
-    def __init__(self, message: str = "Endpoint rate limit exceeded", endpoint_id: str = None):
+    def __init__(
+        self, message: str = "Endpoint rate limit exceeded", endpoint_id: str = None
+    ):
         """Initialize the EndpointRateLimitError.
 
         Args:
@@ -289,10 +323,13 @@ class EndpointRateLimitError(EndpointError):
 # Phase 5 Webhook, Skill & Metrics Exception Classes
 # =============================================================================
 
+
 class WebhookVerificationError(SymbiontError):
     """Raised when webhook signature verification fails."""
 
-    def __init__(self, message: str = "Webhook verification failed", header_name: str = None):
+    def __init__(
+        self, message: str = "Webhook verification failed", header_name: str = None
+    ):
         """Initialize the WebhookVerificationError.
 
         Args:
@@ -348,7 +385,9 @@ class MetricsExportError(SymbiontError):
 class MetricsConfigError(SymbiontError):
     """Raised when metrics configuration is invalid."""
 
-    def __init__(self, message: str = "Metrics configuration error", config_field: str = None):
+    def __init__(
+        self, message: str = "Metrics configuration error", config_field: str = None
+    ):
         """Initialize the MetricsConfigError.
 
         Args:

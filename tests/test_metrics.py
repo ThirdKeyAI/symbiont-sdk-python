@@ -91,7 +91,9 @@ class TestFileMetricsExporter:
 
     def test_shutdown(self, tmp_path):
         """shutdown() is a no-op but doesn't raise."""
-        exporter = FileMetricsExporter(FileExporterConfig(path=str(tmp_path / "x.json")))
+        exporter = FileMetricsExporter(
+            FileExporterConfig(path=str(tmp_path / "x.json"))
+        )
         exporter.shutdown()
 
     def test_overwrite(self, tmp_path):
@@ -180,8 +182,9 @@ class TestMetricsClient:
         mock_parent._request.return_value = mock_response
 
         client = MetricsClient(mock_parent)
-        result = client.get_metrics_snapshot()
+        result = client.get_metrics()
         assert result["timestamp"] == "2026-02-15T12:00:00Z"
+        # The only metrics endpoint the OSS runtime serves is GET /api/v1/metrics.
         mock_parent._request.assert_called_once_with(
-            "GET", "/metrics/snapshot", json=None, params=None
+            "GET", "metrics", json=None, params=None
         )
