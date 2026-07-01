@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.4] - 2026-07-01
+
+Documentation and packaging patch. Compatible with the Symbiont runtime v1.14.x
+through v1.17.x for the documented REST surface.
+
+### Changed
+
+- **README rewritten to reflect the SDK's actual capabilities.** Removed
+  documentation of `client.reasoning.*`, `client.toolclad.*`, and Communication
+  Policy Gate methods that are not implemented in the SDK, and corrected the
+  metrics example (`get_metrics` / `MetricsCollector` constructor).
+- Added a runtime compatibility note.
+
+### Fixed
+
+- **License declaration in `setup.py`** now reads `Apache-2.0` (was `MIT`),
+  matching `pyproject.toml`, the `LICENSE` file, and the classifiers.
+
+### Added
+
+- `examples/` — a self-contained `MarkdownMemoryStore` example (no runtime
+  required) and a runtime hello example.
+
 ## [1.11.0] - 2026-04-24
 
 Tracks Symbiont runtime v1.11.0.
