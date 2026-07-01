@@ -72,6 +72,19 @@ for agent_id in client.list_agents():
 
 ---
 
+## Compatibility
+
+The SDK talks to the runtime over its versioned REST API (`/api/v1`).
+
+| SDK (`symbiont-sdk`) | Symbiont runtime |
+|----------------------|------------------|
+| 1.14.x               | 1.14.x (tested); compatible with 1.15.x / 1.16.x for the documented surface |
+
+Pin the SDK's minor version to your runtime's minor version when you can; newer
+1.x runtimes remain compatible for the endpoints documented here.
+
+---
+
 ## Capabilities
 
 The main `Client` exposes runtime functionality directly and through namespaced sub-clients.
