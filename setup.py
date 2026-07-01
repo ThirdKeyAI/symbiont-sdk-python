@@ -30,10 +30,11 @@ setup(
     install_requires=read_requirements(),
     python_requires='>=3.7',
     keywords=['symbiont', 'sdk', 'api', 'ai', 'agents'],
-    license='MIT',
+    license='Apache-2.0',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.8',
