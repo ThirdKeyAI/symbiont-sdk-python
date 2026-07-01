@@ -141,7 +141,7 @@ from .webhooks import HmacVerifier, JwtVerifier, SignatureVerifier, WebhookProvi
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "1.14.3"
+__version__ = "1.14.4"
 
 __all__ = [
     # Client
