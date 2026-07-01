@@ -10,7 +10,7 @@
 **Official Python SDK for Symbiont, the policy-governed agent runtime.**
 *Same agent. Secure runtime.*
 
-This SDK is the integration surface for the [Symbiont runtime](https://github.com/thirdkeyai/symbiont). Use it from any Python application to manage agents, drive scheduled and channel-bound execution, run the ORGA reasoning loop, register ToolClad-governed tools, evaluate the Communication Policy Gate, verify webhooks, and integrate AgentPin identity — all against a runtime that enforces Cedar policy, SchemaPin tool verification, and tamper-evident audit logging.
+This SDK is the integration surface for the [Symbiont runtime](https://github.com/thirdkeyai/symbiont). Use it from any Python application to manage agents and workflows, drive scheduled and channel-bound execution, verify inbound webhooks, scan agent skills, persist agent memory, and integrate AgentPin identity — all against a runtime that enforces Cedar policy, SchemaPin tool verification, ToolClad tool contracts, and tamper-evident audit logging.
 
 The runtime decides what an agent may do. The SDK decides how your application talks to the runtime.
 
@@ -78,31 +78,33 @@ The main `Client` exposes runtime functionality directly and through namespaced 
 
 | Surface | What it covers |
 |---------|----------------|
-| `Client` (agents, workflows) | Agent lifecycle (create, execute, re-execute, delete, list, status, history) and workflow execution |
-| `client.reasoning` | ORGA loop control, journal, Cedar policies, circuit breakers, knowledge bridge, tool profiles, loop diagnostics |
-| `client.toolclad` | ToolClad manifests — list, validate, test, execute, schema, hot reload |
-| `client` (communication) | `list_communication_rules`, `add_communication_rule`, `remove_communication_rule`, `evaluate_communication` |
-| `client.agentpin` | Client-side AgentPin keygen, credential issuance and verification, discovery, key pinning, trust bundles |
-| `ScheduleClient` | Cron schedules with pause/resume/trigger and run history |
-| `ChannelClient` | Slack / Teams / Mattermost adapters, mappings, audit |
-| `client.metrics_client` (`MetricsClient`) + exporters | Snapshots, file export, OTLP, periodic background collection |
+| `Client` — agents & workflows | Agent lifecycle (`create_agent`, `execute_agent`, `delete_agent`, `list_agents`, `get_agent_status`) and `execute_workflow` |
+| `Client` — messaging | Inter-agent messaging (`send_message`, `receive_messages`, `get_message_status`), heartbeats, and agent events |
+| `Client` — auth, health & metrics | `authenticate_jwt`, `refresh_token`, `validate_permissions`, `health_check`, `get_metrics` |
+| `client.schedules` (`ScheduleClient`) | Cron schedules with pause/resume/trigger and run history |
+| `client.channels` (`ChannelClient`) | Slack / Teams / Mattermost adapters, identity mappings, audit |
+| `client.agentpin` (`AgentPinClient`) | Client-side AgentPin keygen, credential issuance and verification, discovery, key pinning, trust bundles |
+| `client.metrics_client` (`MetricsClient`) + exporters | Metrics snapshots, file export, periodic background collection |
 | `MarkdownMemoryStore` | File-based agent context that survives restarts |
-| `SkillScanner` / `SkillLoader` | 10 built-in ClawHavoc rules; YAML frontmatter; SchemaPin signature status |
+| `SkillScanner` / `SkillLoader` | Built-in ClawHavoc rules; YAML frontmatter; SchemaPin signature status |
 | `HmacVerifier` / `JwtVerifier` / `WebhookProvider` | Inbound webhook signature verification |
 
-All response payloads are Pydantic models with full type coverage.
+All response payloads are Pydantic models with full type coverage. The runtime
+enforces Cedar policy, ToolClad tool contracts, SchemaPin verification, and the
+Communication Policy Gate server-side; the SDK talks to a runtime where these
+are already in force.
 
 ---
 
 ## Trust Stack integration
 
-The SDK exposes the runtime features that enforce the Symbiont Trust Stack:
+The SDK gives you client-side access to the Trust Stack primitives it owns, and
+typed access to a runtime that enforces the rest:
 
-- **Cedar policies** via `client.reasoning.add_cedar_policy()` and `list_cedar_policies()` — fine-grained authorization for every agent action
 - **AgentPin** via `client.agentpin.*` — domain-anchored ES256 credential issuance and verification, runs entirely client-side (no runtime required)
-- **ToolClad** via `client.toolclad.*` — declarative tool manifests with argument validation, scope enforcement, and Cedar policy generation; supports `oneshot`, `session`, `browser`, `http`, and `mcp-proxy` backends as of Symbiont v1.10.0
-- **Communication Policy Gate** via `client.evaluate_communication()` and rule management — Cedar-evaluated allow/deny rules for inter-agent messages
-- **SchemaPin** — enforced server-side; tool signatures are verified before tool execution
+- **Webhook verification** via `HmacVerifier` / `JwtVerifier` / `WebhookProvider` — validate inbound webhook signatures before dispatch
+- **Skill scanning** via `SkillScanner` / `SkillLoader` — ClawHavoc static rules and SchemaPin signature status for agent skills
+- **Cedar policy, ToolClad tool contracts, and SchemaPin verification** — enforced by the runtime server-side; the SDK connects to a runtime where these are already in force
 
 Model output is never treated as execution authority. The runtime controls what actually happens.
 
@@ -110,71 +112,23 @@ Model output is never treated as execution authority. The runtime controls what 
 
 ## Examples
 
-### Reasoning loop
-
-Run an autonomous Observe-Reason-Gate-Act cycle with policy gates, circuit breakers, and journal replay:
+### Agents and workflows
 
 ```python
-from symbiont import Client, RunReasoningLoopRequest, LoopConfig, CedarPolicy
+from symbiont import Client
 
 client = Client()
 
-response = client.reasoning.run_loop(
-    "agent-1",
-    RunReasoningLoopRequest(
-        config=LoopConfig(max_iterations=10, timeout_ms=60000),
-        initial_message="Analyze the latest sales data and create a report.",
-    ),
-)
-print(response.result.output, response.result.iterations)
+# Inspect the fleet
+for agent_id in client.list_agents():
+    status = client.get_agent_status(agent_id)
+    print(agent_id, status.state)
 
-# Read journal entries for replay/audit
-journal = client.reasoning.get_journal_entries("agent-1", limit=50)
+# Execute an agent, and run a workflow
+result = client.execute_agent("agent-1")
 
-# Add an action-level Cedar policy
-client.reasoning.add_cedar_policy("agent-1", CedarPolicy(
-    name="deny-file-write",
-    source='forbid(principal, action == "tool_call", resource) when { resource.name == "write_file" };',
-    active=True,
-))
-
-# Inspect circuit breakers and adaptive parameters
-breakers = client.reasoning.get_circuit_breaker_status("agent-1")
-profiles = client.reasoning.get_tool_profiles("agent-1")
-```
-
-### ToolClad — governed tool execution
-
-Tools are declared in `.clad.toml` manifests with argument validation, scope enforcement, and Cedar policy generation. Drive them from the SDK:
-
-```python
-tools = client.toolclad.list_tools()
-schema = client.toolclad.get_schema("nmap")
-
-result = client.toolclad.execute_tool("nmap", {"target": "10.0.0.1"})
-print(result["status"], result["scan_id"], result["exit_code"])
-
-# Hot reload after editing a manifest on disk
-client.toolclad.reload_tools()
-```
-
-### Communication Policy Gate
-
-```python
-client.add_communication_rule({
-    "from_agent": "analyst",
-    "to_agent": "reporter",
-    "action": "allow",
-    "priority": 10,
-    "max_depth": 3,
-})
-
-decision = client.evaluate_communication(
-    sender="analyst",
-    recipient="reporter",
-    action="send_message",
-)
-print(decision["allowed"], decision.get("rule"), decision.get("reason"))
+# Inter-agent messaging is available via send_message / receive_messages,
+# and workflows via execute_workflow(WorkflowExecutionRequest(...)).
 ```
 
 ### AgentPin — client-side identity
@@ -281,13 +235,14 @@ skills = loader.load_all()
 ### Metrics export
 
 ```python
-from symbiont import Client, MetricsCollector, FileMetricsExporter, CompositeExporter
+from symbiont import Client, FileMetricsExporter, MetricsCollector
 
 client = Client()
-snapshot = client.metrics_client.get_metrics_snapshot()
+metrics = client.metrics_client.get_metrics()
 
-exporter = CompositeExporter([FileMetricsExporter("/var/log/symbiont/metrics.json")])
-collector = MetricsCollector(client.metrics_client, exporter, interval_seconds=60)
+# Periodically export metrics from a background thread
+exporter = FileMetricsExporter("/var/log/symbiont/metrics.json")
+collector = MetricsCollector(exporter, interval_seconds=60)
 collector.start()
 ```
 
