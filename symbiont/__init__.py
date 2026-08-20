@@ -82,6 +82,7 @@ from .models import (
     SignedTool,
     SigningRequest,
     SigningResponse,
+    StatusResponse,
     SystemMetrics,
     # Tool Review Models
     Tool,
@@ -141,7 +142,7 @@ from .webhooks import HmacVerifier, JwtVerifier, SignatureVerifier, WebhookProvi
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "1.14.4"
+__version__ = "1.15.0"
 
 __all__ = [
     # Client
@@ -175,6 +176,7 @@ __all__ = [
     "SignedTool",
     # System Models
     "HealthResponse",
+    "StatusResponse",
     "ErrorResponse",
     "PaginationInfo",
     "SystemMetrics",

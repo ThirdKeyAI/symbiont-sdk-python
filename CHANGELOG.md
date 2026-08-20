@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] - 2026-08-08
+
+Adds the one runtime endpoint that appeared after 1.14.4. Compatible with the
+Symbiont runtime v1.14.x through v1.19.x for the documented REST surface.
+
+### Added
+
+- **`Client.get_status()`** → `GET /api/v1/status`, added in runtime v1.18.0.
+  Returns version, health, and the agent/schedule/channel counts in one
+  payload, so a dashboard does not have to fan out across `/health`,
+  `/agents`, `/schedules` and `/channels`. The runtime gates this on an admin
+  key; a scoped key receives 403. New `StatusResponse` model, exported from
+  the package root.
+
+### Changed
+
+- Compatibility table updated to runtime v1.19.x.
+- `SKILL.md` version resynced — it was left at 1.14.3 when 1.14.4 shipped.
+
+### Note
+
+`POST /api/v1/approvals/{id}/approve` and `/deny` began requiring an **admin**
+API key in runtime v1.19.0 (previously any scoped key was accepted). The SDK
+does not wrap those endpoints, so no SDK change is needed; callers hitting
+them directly must supply an admin key.
+
 ## [1.14.4] - 2026-07-01
 
 Documentation and packaging patch. Compatible with the Symbiont runtime v1.14.x

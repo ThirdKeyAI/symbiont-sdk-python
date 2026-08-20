@@ -183,3 +183,34 @@ def test_push_agent_event(mock_request):
     )
     body = mock_request.call_args[1]["json"]
     assert body == {"event_type": "RunCompleted", "payload": {"ok": True}}
+
+
+@patch("requests.request")
+def test_get_status(mock_request):
+    """get_status() maps to GET /api/v1/status (runtime v1.18.0+).
+
+    The runtime gates this on an admin key and returns health plus the
+    registry counts in one payload, so a caller does not have to fan out
+    across /health, /agents, /schedules and /channels.
+    """
+    mock_request.return_value = _mock_ok(
+        {
+            "version": "1.19.0",
+            "healthy": True,
+            "agent_count": 3,
+            "schedule_count": 2,
+            "channel_count": 1,
+        }
+    )
+    client = _client()
+    status = client.get_status()
+
+    assert mock_request.call_args[0] == (
+        "GET",
+        "http://localhost:8080/api/v1/status",
+    )
+    assert status.version == "1.19.0"
+    assert status.healthy is True
+    assert status.agent_count == 3
+    assert status.schedule_count == 2
+    assert status.channel_count == 1

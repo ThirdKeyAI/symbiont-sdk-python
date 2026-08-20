@@ -25,6 +25,7 @@ from .models import (
     AgentStatusResponse,
     # System models
     HealthResponse,
+    StatusResponse,
     SystemMetrics,
     # Workflow models
     WorkflowExecutionRequest,
@@ -411,6 +412,19 @@ class Client:
         """
         response = self._request("GET", "health")
         return HealthResponse(**response.json())
+
+    def get_status(self) -> StatusResponse:
+        """Get aggregated runtime status.
+
+        Maps to ``GET /api/v1/status`` (runtime v1.18.0+). Rolls health and the
+        agent/schedule/channel counts into one call. Requires an admin key —
+        a scoped key gets 403.
+
+        Returns:
+            StatusResponse: Version, health, and registry counts
+        """
+        response = self._request("GET", "status")
+        return StatusResponse(**response.json())
 
     def get_metrics(self) -> SystemMetrics:
         """Get enhanced system metrics.

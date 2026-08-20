@@ -267,6 +267,21 @@ class HealthResponse(BaseModel):
     version: str
 
 
+class StatusResponse(BaseModel):
+    """Aggregated runtime status.
+
+    Maps to ``GET /api/v1/status``, added in runtime v1.18.0. Unlike
+    :class:`HealthResponse` this rolls health together with registry counts,
+    so a dashboard needs one call instead of four. Requires an admin key.
+    """
+
+    version: str
+    healthy: bool
+    agent_count: int
+    schedule_count: int
+    channel_count: int
+
+
 class ErrorResponse(BaseModel):
     """Error response structure."""
 

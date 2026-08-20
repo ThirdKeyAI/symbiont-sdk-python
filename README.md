@@ -78,7 +78,7 @@ The SDK talks to the runtime over its versioned REST API (`/api/v1`).
 
 | SDK (`symbiont-sdk`) | Symbiont runtime |
 |----------------------|------------------|
-| 1.14.x               | 1.14.x (tested); compatible with 1.15.x / 1.16.x for the documented surface |
+| 1.15.x               | 1.19.x (tested); compatible with 1.14.x+ for the documented surface, minus `get_status` (runtime 1.18.0+) |
 
 Pin the SDK's minor version to your runtime's minor version when you can; newer
 1.x runtimes remain compatible for the endpoints documented here.
@@ -93,7 +93,7 @@ The main `Client` exposes runtime functionality directly and through namespaced 
 |---------|----------------|
 | `Client` — agents & workflows | Agent lifecycle (`create_agent`, `execute_agent`, `delete_agent`, `list_agents`, `get_agent_status`) and `execute_workflow` |
 | `Client` — messaging | Inter-agent messaging (`send_message`, `receive_messages`, `get_message_status`), heartbeats, and agent events |
-| `Client` — auth, health & metrics | `authenticate_jwt`, `refresh_token`, `validate_permissions`, `health_check`, `get_metrics` |
+| `Client` — auth, health & metrics | `authenticate_jwt`, `refresh_token`, `validate_permissions`, `health_check`, `get_status`, `get_metrics` |
 | `client.schedules` (`ScheduleClient`) | Cron schedules with pause/resume/trigger and run history |
 | `client.channels` (`ChannelClient`) | Slack / Teams / Mattermost adapters, identity mappings, audit |
 | `client.agentpin` (`AgentPinClient`) | Client-side AgentPin keygen, credential issuance and verification, discovery, key pinning, trust bundles |
