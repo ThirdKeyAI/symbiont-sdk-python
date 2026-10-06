@@ -104,20 +104,39 @@ class Agent(BaseModel):
 
 
 class ResourceUsage(BaseModel):
-    """Resource usage information for agents."""
+    """Resource usage information for agents.
 
-    memory_bytes: int = Field(..., description="Memory usage in bytes")
-    cpu_percent: float = Field(..., description="CPU usage percentage")
-    active_tasks: int = Field(..., description="Number of active tasks")
+    Runtime 1.21.0 has no per-agent resource sampler, so ``memory_bytes`` and
+    ``cpu_percent`` are ``None`` for both internal and external agents. Do not
+    render a missing sample as zero usage -- present it as "not sampled".
+    Separately sampled worker totals are available from the worker capacity
+    endpoint and are not per-agent values.
+    """
+
+    memory_bytes: Optional[int] = Field(
+        None, description="Memory usage in bytes, or None when not sampled"
+    )
+    cpu_percent: Optional[float] = Field(
+        None, description="CPU usage percentage, or None when not sampled"
+    )
+    active_tasks: int = Field(
+        ..., description="Tasks owned by the scheduler for this agent"
+    )
 
 
 class AgentStatusResponse(BaseModel):
-    """Response structure for agent status queries."""
+    """Response structure for agent status queries.
+
+    ``last_activity`` is a scheduler timestamp, not a resource sample time.
+    """
 
     agent_id: str
     state: AgentState
     last_activity: datetime
     resource_usage: ResourceUsage
+    execution_mode: Optional[str] = Field(
+        None, description="Scheduler execution mode, e.g. 'Ephemeral'"
+    )
 
 
 # =============================================================================
@@ -1231,7 +1250,13 @@ class WebhookVerificationConfig(BaseModel):
 
 
 class WebhookInvocationStatus(str, Enum):
-    """Status of an HTTP Input invocation."""
+    """Status of an HTTP Input invocation.
+
+    Runtime 1.21.0 retired the ``execution_started`` handoff on this route:
+    every reasoning request returns its own result, including while another
+    invocation of the same agent is active. ``EXECUTION_STARTED`` is retained
+    for runtimes older than 1.21.0, which still emit it.
+    """
 
     EXECUTION_STARTED = "execution_started"
     COMPLETED = "completed"
@@ -1274,9 +1299,20 @@ class WebhookToolRun(BaseModel):
     )
 
 
+class WebhookRunAudit(BaseModel):
+    """Public reference to the protected run journal for an invocation."""
+
+    run_id: str = Field(..., description="Run identifier")
+    path: str = Field(..., description="Journal path on the runtime host")
+    public_key: str = Field(..., description="Hex-encoded journal signing key")
+
+
 class WebhookExecutionStartedResponse(BaseModel):
-    """Response when the target agent was running and the request was
-    dispatched on the runtime communication bus.
+    """Dispatch handoff returned by runtimes older than 1.21.0.
+
+    Runtime 1.21.0 retired this shape on the HTTP Input route and answers every
+    reasoning request with :class:`WebhookCompletedResponse`. The model is kept
+    so this SDK still parses responses from supported earlier runtimes.
     """
 
     status: str = Field("execution_started", description="Always 'execution_started'")
@@ -1300,6 +1336,25 @@ class WebhookCompletedResponse(BaseModel):
         default_factory=list,
         description="Per-tool execution previews from the ORGA loop",
     )
+    termination_reason: Optional[str] = Field(
+        None, description="Why the loop stopped, e.g. 'Completed'"
+    )
+    iterations: Optional[int] = Field(None, description="ORGA loop iterations")
+    audit: Optional[WebhookRunAudit] = Field(
+        None, description="Public audit reference for the protected run journal"
+    )
+    invocation_id: Optional[str] = Field(
+        None, description="Durable invocation identity for retries"
+    )
+    replayed: Optional[bool] = Field(
+        None, description="True when a saved result was returned for a retry"
+    )
+    total_usage: Optional[Dict[str, Any]] = Field(
+        None, description="Token usage totals for the invocation"
+    )
+    budget: Optional[Dict[str, Any]] = Field(
+        None, description="Shared budget snapshot at completion"
+    )
     model: str = Field(..., description="LLM model identifier used")
     provider: str = Field(
         ..., description="LLM provider name (e.g. 'anthropic', 'openai', 'openrouter')"
@@ -1308,7 +1363,9 @@ class WebhookCompletedResponse(BaseModel):
     timestamp: str = Field(..., description="RFC 3339 timestamp")
 
 
-#: Discriminated union of all HTTP Input invocation responses.
+#: HTTP Input invocation response. Runtime 1.21.0 serves every reasoning
+#: request on this route with the completed shape; the started shape remains
+#: for supported runtimes older than 1.21.0.
 WebhookInvocationResponse = Union[
     WebhookExecutionStartedResponse, WebhookCompletedResponse
 ]

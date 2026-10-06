@@ -1,6 +1,7 @@
 """Symbiont SDK API Client."""
 
 import time
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -17,6 +18,7 @@ from .exceptions import (
     NotFoundError,
     PermissionDeniedError,
     RateLimitError,
+    ReconciledInvocationError,
     TokenRefreshError,
 )
 from .models import (
@@ -220,6 +222,21 @@ class Client:
                 elif response.status_code == 404:
                     raise NotFoundError(
                         "Resource not found", response_text=response_text
+                    )
+                elif response.status_code == 409:
+                    # A reconciled invocation carries the operator's signed
+                    # resolution instead of a manufactured completion.
+                    resolution = None
+                    try:
+                        body = response.json()
+                        if isinstance(body, dict):
+                            resolution = body.get("resolution")
+                    except ValueError:
+                        pass
+                    raise ReconciledInvocationError(
+                        "Invocation was reconciled by an operator; no work repeated",
+                        resolution=resolution,
+                        response_text=response_text,
                     )
                 elif response.status_code == 429:
                     raise RateLimitError(
@@ -518,19 +535,37 @@ class Client:
         response = self._request("DELETE", f"agents/{agent_id}")
         return response.json()
 
-    def execute_agent(self, agent_id: str) -> Dict:
-        """Execute an agent immediately.
+    def execute_agent(
+        self, agent_id: str, idempotency_key: Optional[str] = None
+    ) -> Dict:
+        """Submit one invocation of an existing agent.
 
-        Triggers a fresh execution of an existing agent. Maps to
-        ``POST /api/v1/agents/{id}/execute`` on the runtime.
+        Maps to ``POST /api/v1/agents/{id}/execute``. Runtime 1.21.0 treats the
+        ``Idempotency-Key`` as the durable invocation identity: reuse the same
+        UUID with the same request to retrieve a saved completion or an explicit
+        ``in_progress`` / ``unresolved`` / ``reconciled`` / ``conflict`` state
+        rather than running the agent twice. A key is generated when omitted,
+        which makes the call non-retryable -- pass your own to retry safely.
 
         Args:
             agent_id: The agent identifier
+            idempotency_key: Invocation UUID retained across retries
 
         Returns:
-            Dict: ``{"execution_id": str, "status": str}``
+            Dict: ``{"execution_id": str, "status": str}`` with ``status``
+            ``queued`` on admission
+
+        Raises:
+            ReconciledInvocationError: the invocation was reconciled by an
+                operator; the signed resolution is on the exception
         """
-        response = self._request("POST", f"api/v1/agents/{agent_id}/execute", json={})
+        key = idempotency_key or str(uuid.uuid4())
+        response = self._request(
+            "POST",
+            f"api/v1/agents/{agent_id}/execute",
+            json={},
+            headers={"Idempotency-Key": key},
+        )
         return response.json()
 
     # =============================================================================

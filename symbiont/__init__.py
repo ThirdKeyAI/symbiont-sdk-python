@@ -11,6 +11,7 @@ from .exceptions import (
     MetricsExportError,
     NotFoundError,
     RateLimitError,
+    ReconciledInvocationError,
     SkillLoadError,
     SkillScanError,
     SymbiontError,
@@ -105,6 +106,7 @@ from .models import (
     WebhookInvocationRequest,
     WebhookInvocationResponse,
     WebhookInvocationStatus,
+    WebhookRunAudit,
     WebhookToolRun,
     WebhookTriggerRequest,
     WebhookTriggerResponse,
@@ -142,7 +144,7 @@ from .webhooks import HmacVerifier, JwtVerifier, SignatureVerifier, WebhookProvi
 # Load environment variables from .env file
 load_dotenv()
 
-__version__ = "1.15.0"
+__version__ = "1.16.0"
 
 __all__ = [
     # Client
@@ -223,6 +225,7 @@ __all__ = [
     "WebhookInvocationRequest",
     "WebhookToolRun",
     "WebhookExecutionStartedResponse",
+    "WebhookRunAudit",
     "WebhookCompletedResponse",
     "WebhookInvocationResponse",
     # AgentPin
@@ -279,6 +282,7 @@ __all__ = [
     "AuthenticationError",
     "NotFoundError",
     "RateLimitError",
+    "ReconciledInvocationError",
     "WebhookVerificationError",
     "SkillLoadError",
     "SkillScanError",

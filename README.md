@@ -78,6 +78,7 @@ The SDK talks to the runtime over its versioned REST API (`/api/v1`).
 
 | SDK (`symbiont-sdk`) | Symbiont runtime |
 |----------------------|------------------|
+| 1.16.x               | 1.21.x (tested); compatible with 1.14.x+ for the documented surface, minus `get_status` (runtime 1.18.0+) |
 | 1.15.x               | 1.19.x (tested); compatible with 1.14.x+ for the documented surface, minus `get_status` (runtime 1.18.0+) |
 
 Pin the SDK's minor version to your runtime's minor version when you can; newer

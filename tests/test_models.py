@@ -368,8 +368,9 @@ class TestWebhookInvocationModels:
     def test_invocation_status_enum_values(self):
         from symbiont import WebhookInvocationStatus
 
-        assert WebhookInvocationStatus.EXECUTION_STARTED.value == "execution_started"
         assert WebhookInvocationStatus.COMPLETED.value == "completed"
+        # Retained for runtimes older than 1.21.0, which still emit it.
+        assert WebhookInvocationStatus.EXECUTION_STARTED.value == "execution_started"
 
     def test_invocation_request_accepts_prompt(self):
         from symbiont import WebhookInvocationRequest
@@ -405,9 +406,10 @@ class TestWebhookInvocationModels:
         assert run.input["target"] == "1.1.1.1"
         assert run.output_preview.startswith("open ports")
 
-    def test_execution_started_response(self):
+    def test_execution_started_response_still_parses_for_older_runtimes(self):
         from symbiont import WebhookExecutionStartedResponse
 
+        # 1.21.0 no longer emits this, but supported earlier runtimes do.
         resp = WebhookExecutionStartedResponse(
             agent_id="agent-1",
             message_id="msg-1",
@@ -416,6 +418,34 @@ class TestWebhookInvocationModels:
         )
         assert resp.status == "execution_started"
         assert resp.latency_ms == 12
+
+    def test_completed_response_carries_audit_and_retry_identity(self):
+        from symbiont import WebhookCompletedResponse
+
+        resp = WebhookCompletedResponse(
+            agent_id="agent-1",
+            response="Task complete.",
+            termination_reason="Completed",
+            iterations=1,
+            audit={
+                "run_id": "22222222-2222-4222-8222-222222222222",
+                "path": "/srv/.symbiont/governed/run.jsonl",
+                "public_key": "deadbeef",
+            },
+            invocation_id="11111111-1111-4111-8111-111111111111",
+            replayed=True,
+            total_usage={"input_tokens": 10, "output_tokens": 4},
+            budget={"remaining_tokens": 900},
+            model="m",
+            provider="p",
+            latency_ms=12,
+            timestamp="2026-04-22T00:00:00Z",
+        )
+        assert resp.audit.run_id == "22222222-2222-4222-8222-222222222222"
+        assert resp.audit.public_key == "deadbeef"
+        assert resp.termination_reason == "Completed"
+        assert resp.replayed is True
+        assert resp.total_usage["input_tokens"] == 10
 
     def test_completed_response_with_tool_runs(self):
         from symbiont import WebhookCompletedResponse, WebhookToolRun
@@ -438,3 +468,70 @@ class TestWebhookInvocationModels:
         assert resp.status == "completed"
         assert len(resp.tool_runs) == 1
         assert resp.tool_runs[0].tool == "nmap"
+
+
+class TestRuntime121Contract:
+    """Runtime 1.21.0 response-shape changes."""
+
+    def test_resource_samples_are_nullable(self):
+        from symbiont import AgentStatusResponse, ResourceUsage
+
+        # 1.21.0 has no per-agent sampler: CPU and memory come back null and
+        # must not be coerced to zero.
+        status = AgentStatusResponse(
+            agent_id="agent-1",
+            state="idle",
+            last_activity="2026-10-06T00:00:00Z",
+            resource_usage=ResourceUsage(
+                memory_bytes=None, cpu_percent=None, active_tasks=2
+            ),
+            execution_mode="Ephemeral",
+        )
+        assert status.resource_usage.memory_bytes is None
+        assert status.resource_usage.cpu_percent is None
+        assert status.resource_usage.active_tasks == 2
+        assert status.execution_mode == "Ephemeral"
+
+    def test_reconciled_invocation_raises_with_resolution(self):
+        from unittest.mock import MagicMock, patch
+
+        from symbiont import Client
+        from symbiont.config import ClientConfig
+        from symbiont.exceptions import ReconciledInvocationError
+
+        config = ClientConfig()
+        config.auth.jwt_secret_key = "test-secret-key-for-validation"
+        config.auth.enable_refresh_tokens = False
+        config.api_key = "test-api-key"
+        client = Client(config=config)
+
+        response = MagicMock(status_code=409, text="{}")
+        response.json.return_value = {
+            "status": "reconciled",
+            "resolution": {"outcome": "Failed", "rationale": "operator reviewed"},
+        }
+        with patch("requests.request", return_value=response):
+            with pytest.raises(ReconciledInvocationError) as excinfo:
+                client.execute_agent("agent-1", idempotency_key="k")
+        assert excinfo.value.resolution["outcome"] == "Failed"
+
+    def test_execute_agent_sends_idempotency_key(self):
+        from unittest.mock import MagicMock, patch
+
+        from symbiont import Client
+        from symbiont.config import ClientConfig
+
+        config = ClientConfig()
+        config.auth.jwt_secret_key = "test-secret-key-for-validation"
+        config.auth.enable_refresh_tokens = False
+        config.api_key = "test-api-key"
+        client = Client(config=config)
+
+        response = MagicMock(status_code=200)
+        response.json.return_value = {"status": "queued", "execution_id": "e1"}
+        with patch("requests.request", return_value=response) as request:
+            client.execute_agent("agent-1", idempotency_key="reused-uuid")
+        headers = request.call_args.kwargs["headers"]
+        assert headers["Idempotency-Key"] == "reused-uuid"
+        # The retry identity must not displace authentication.
+        assert "Authorization" in headers

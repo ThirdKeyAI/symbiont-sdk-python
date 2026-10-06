@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.0] - 2026-10-06
+
+Tracks the REST surface changes in Symbiont runtime v1.21.0. Compatible with
+the runtime v1.14.x through v1.21.x: every change here is additive, and the
+response shapes earlier runtimes emit still parse.
+
+### Added
+
+- **`ReconciledInvocationError`** for HTTP 409 on an invocation an operator has
+  already reconciled. The runtime returns the separately signed `resolution`
+  rather than a manufactured completion, and the exception carries it so a
+  caller can surface it instead of retrying the same identity. Subclasses
+  `APIError`, so handlers that already catch 409 keep working.
+- **`Client.execute_agent(agent_id, idempotency_key=...)`** sends the
+  `Idempotency-Key` header that runtime v1.21.0 treats as the durable
+  invocation identity. Reusing a UUID with the same request returns a saved
+  completion or an explicit `in_progress` / `unresolved` / `reconciled` /
+  `conflict` state instead of running the agent twice. A key is generated when
+  omitted; pass your own to make a call retryable.
+- **`WebhookRunAudit`** and new optional fields on `WebhookCompletedResponse`
+  (`termination_reason`, `iterations`, `audit`, `invocation_id`, `replayed`,
+  `total_usage`, `budget`), matching the v1.21.0 HTTP Input response.
+- **`AgentStatusResponse.execution_mode`**, flattened out of the removed
+  `execution_context` object.
+
+### Changed
+
+- **`ResourceUsage.memory_bytes` and `cpu_percent` are now nullable.** Runtime
+  v1.21.0 has no per-agent resource sampler and returns `null` for internal and
+  external agents, which the previous required `int` / `float` fields refused
+  to parse. Treat a missing sample as "not sampled" — never as zero usage.
+  Separately sampled worker totals come from the worker capacity endpoint and
+  are not per-agent values.
+- `WebhookInvocationStatus.EXECUTION_STARTED` and
+  `WebhookExecutionStartedResponse` are documented as pre-v1.21.0 only. The
+  runtime retired that handoff on the HTTP Input route, but both are retained
+  so this SDK still parses responses from supported earlier runtimes.
+- Compatibility table updated to runtime v1.21.x.
+- `SKILL.md` version synced to 1.16.0.
+
 ## [1.15.0] - 2026-08-08
 
 Adds the one runtime endpoint that appeared after 1.14.4. Compatible with the

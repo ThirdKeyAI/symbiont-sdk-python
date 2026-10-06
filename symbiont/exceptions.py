@@ -396,3 +396,21 @@ class MetricsConfigError(SymbiontError):
         """
         super().__init__(message)
         self.config_field = config_field
+
+
+class ReconciledInvocationError(APIError):
+    """Raised when the runtime refuses to replay a reconciled invocation.
+
+    Runtime 1.21.0 answers a retry of an invocation an operator has already
+    reconciled with HTTP 409 and the separately signed ``resolution`` object.
+    It never manufactures a runtime completion for one. The job stays paused
+    until an explicit resume, so callers should surface the resolution to an
+    operator rather than retrying the same identity.
+
+    Subclasses :class:`APIError` so existing handlers that catch 409 as a
+    generic API error keep working.
+    """
+
+    def __init__(self, message, resolution=None, response_text=None):
+        super().__init__(message, 409, response_text)
+        self.resolution = resolution
